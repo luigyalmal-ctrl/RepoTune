@@ -268,7 +268,13 @@ describe("CLI integration", () => {
 		expect(content).toContain("Use pnpm, never npm.");
 
 		const { status: addStatus } = runCli(
-			["rule", "add", "Use manual content outside a managed block.", "--scope", "global"],
+			[
+				"rule",
+				"add",
+				"Use manual content outside a managed block.",
+				"--scope",
+				"global",
+			],
 			dir,
 		);
 		expect(addStatus).toBe(0);

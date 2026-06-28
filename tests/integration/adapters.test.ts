@@ -98,9 +98,11 @@ describe("I-18: Cursor path rule", () => {
 	});
 });
 
-// I-19: Claude path rule → .claude/rules/{id}.md with globs: key, value is quoted
+// I-19: Claude path rule → .claude/rules/{id}.md with both paths: array and globs: scalar
+// [COMPATIBILITY NOTE] Both keys emitted: paths: per current docs (code.claude.com/docs/en/memory),
+// globs: for backward runtime compatibility (anthropics/claude-code#17204, #13905).
 describe("I-19: Claude path rule", () => {
-	it("creates .claude/rules/ file with globs: key and quoted value", async () => {
+	it("creates .claude/rules/ file with paths: array and globs: scalar, both quoted", async () => {
 		await setupRepo(dir, ["claude"]);
 		const now = new Date().toISOString();
 		const rules = [
@@ -118,13 +120,17 @@ describe("I-19: Claude path rule", () => {
 			join(dir, ".claude", "rules", "ts-strict.md"),
 			"utf8",
 		);
+		// paths: array (current official docs format)
+		expect(content).toContain("paths:");
+		expect(content).toMatch(/paths:\s*\n\s+- "[^"]+"/);
+		// globs: scalar (prior runtime compatibility)
 		expect(content).toContain("globs:");
-		expect(content).not.toContain("paths:");
-		// Value should be quoted string
 		expect(content).toMatch(/globs:\s+"[^"]+"/);
+		// Both reference the same pattern
+		expect(content).toContain('"src/**/*.ts"');
 	});
 
-	it("glob pattern starting with * is quoted", async () => {
+	it("pattern starting with * is quoted in both keys", async () => {
 		await setupRepo(dir, ["claude"]);
 		const now = new Date().toISOString();
 		const rules = [
@@ -142,7 +148,7 @@ describe("I-19: Claude path rule", () => {
 			join(dir, ".claude", "rules", "ts-all.md"),
 			"utf8",
 		);
-		// Pattern starts with * — must be quoted
+		expect(content).toMatch(/paths:\s*\n\s+- "[*]/);
 		expect(content).toMatch(/globs:\s+"[*]/);
 	});
 });

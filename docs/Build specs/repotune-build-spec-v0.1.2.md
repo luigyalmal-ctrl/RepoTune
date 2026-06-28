@@ -510,12 +510,18 @@ globs: "src/**/*.ts"
 Rule content here.
 ```
 
-**Critical verified facts (GitHub issues #17204, #13905):**
-- The documented `paths:` key **does not work reliably** — confirmed bug in official repo.
-- The `globs:` key works reliably and is the correct key to use.
-- Glob patterns starting with `*` or `{` **must be quoted** in YAML — unquoted values are invalid YAML and silently fail.
-- Rules with no frontmatter (or no `globs:`) load unconditionally at session start.
-- Therefore: for global rules, no frontmatter is the correct approach in `.claude/rules/`.
+**[SPEC UPDATE — 2026-06-27]** Docs now show `paths:` array. Both keys emitted for compatibility.
+
+**Verified facts (GitHub issues #17204, #13905, docs re-checked 2026-06-27):**
+
+- **#17204** (closed "not planned"): `paths:` did not work reliably; `globs:` was the confirmed working key.
+- **#13905** (closed "resolved"): invalid YAML in `paths:` docs was fixed — parser updated.
+- **Current docs** (`code.claude.com/docs/en/memory`): now show `paths:` as a YAML array.
+- Runtime verification was not possible in this environment (CLI unavailable).
+- **Decision — Case B (both keys):** Emit `paths:` array (forward compatibility, current docs) AND `globs:` scalar (backward compatibility, prior runtime evidence). Duplicate YAML keys are syntactically valid; Claude Code ignores unrecognised keys.
+- All pattern values are serialized with `JSON.stringify()` — handles quotes, backslashes, braces.
+- Glob patterns starting with `*` or `{` **must be quoted** in YAML — unquoted values are invalid YAML.
+- Rules with no frontmatter (or unrecognised keys only) load unconditionally at session start.
 
 Capabilities:
 ```typescript
@@ -541,15 +547,17 @@ const claudeCapabilities: AgentCapabilities = {
   - Content: Markdown list of all global rules combined
 - **Path rules** → one `GeneratedFile` per rule targeting `.claude/rules/{ruleId}.md`
   - Strategy: `create`
-  - File format — `globs:` key, pattern must be quoted:
+  - File format — both `paths:` array and `globs:` scalar, value from `JSON.stringify(pathPattern)`:
     ```markdown
     ---
+    paths:
+      - "{rule.pathPattern}"
     globs: "{rule.pathPattern}"
     ---
 
     {rule.content}
     ```
-  - If `rule.pathPattern` starts with `*` or `{`, the adapter quotes it. This is always done — never emit an unquoted glob.
+  - `JSON.stringify` ensures all patterns are safely quoted regardless of content.
 - **Other scopes** → `Warning` with code `CLAUDE_SCOPE_NOT_SUPPORTED_IN_V1`
 
 ### 5.3 Adapter: GitHub Copilot

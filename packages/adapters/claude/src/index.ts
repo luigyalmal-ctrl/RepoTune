@@ -71,12 +71,17 @@ export const claudeAdapter: AgentAdapter = {
 		}
 
 		for (const rule of pathRules) {
-			// Always quote glob values — required for patterns starting with * or {
+			// [COMPATIBILITY NOTE] Official docs (code.claude.com/docs/en/memory) use paths: array.
+			// Prior runtime evidence (anthropics/claude-code#17204) shows globs: scalar working when
+			// paths: did not. Issue #13905 (resolved) fixed YAML parsing; docs now show paths: array.
+			// Emit both keys so the file works across runtime versions. JSON.stringify handles all
+			// characters that break YAML: quotes, backslashes, braces, spaces.
+			const pv = JSON.stringify(rule.pathPattern ?? "");
 			files.push({
 				agentId: "claude",
 				outputPath: `.claude/rules/${rule.id}.md`,
 				strategy: "create",
-				content: `---\nglobs: "${rule.pathPattern ?? ""}"\n---\n\n${rule.content}`,
+				content: `---\npaths:\n  - ${pv}\nglobs: ${pv}\n---\n\n${rule.content}`,
 				ruleIds: [rule.id],
 			});
 		}
