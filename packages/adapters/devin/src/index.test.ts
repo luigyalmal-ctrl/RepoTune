@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Rule } from "@repotune/schemas";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { devinAdapter } from "./index";
+import {
+	devinAdapter,
+	devinAgentsMdOwnerLabel,
+	isDevinSkippedForAgentsMdOwner,
+} from "./index";
 
 function rule(overrides: Partial<Rule> = {}): Rule {
 	return {
@@ -134,5 +138,19 @@ describe("devinAdapter", () => {
 		expect(generatedFiles).toHaveLength(1);
 		expect(generatedFiles[0].outputPath).toBe("AGENTS.md");
 		expect(warnings).toHaveLength(0);
+	});
+
+	it("isDevinSkippedForAgentsMdOwner detects overlap", () => {
+		expect(isDevinSkippedForAgentsMdOwner(["devin", "agents-md"])).toBe(true);
+		expect(isDevinSkippedForAgentsMdOwner(["devin", "codex"])).toBe(true);
+		expect(isDevinSkippedForAgentsMdOwner(["devin"])).toBe(false);
+	});
+
+	it("devinAgentsMdOwnerLabel prefers agents-md over codex", () => {
+		expect(devinAgentsMdOwnerLabel(["devin", "agents-md", "codex"])).toBe(
+			"agents-md",
+		);
+		expect(devinAgentsMdOwnerLabel(["devin", "codex"])).toBe("codex");
+		expect(devinAgentsMdOwnerLabel(["devin"])).toBe(null);
 	});
 });

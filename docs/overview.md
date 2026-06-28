@@ -10,7 +10,7 @@ RepoTune synchronizes AI assistant configuration across supported agents from a 
 - **OpenAI Codex** — `AGENTS.md`
 - **Devin** — `AGENTS.md`
 - **AGENTS.md** — `AGENTS.md`
-- **Antigravity** — `.agents/AGENTS.md`
+- **Antigravity** — `.agents/rules/repotune.md`
 
 Rules are stored in `.ai/registry.json`. Running `repotune sync` reads the registry and writes the correct file format for each enabled agent.
 
@@ -48,7 +48,14 @@ Scopes `language`, `framework`, and `agent` are defined in the schema but not ex
 - `UNSUPPORTED`: arbitrary path-scoped globs for Devin
 - `PARTIAL`: Devin can import Cursor, Windsurf, and Claude Code rules via `.devin/config.json`, but RepoTune does not generate that config file in v0.2.0
 
-`devin`, `codex`, and `agents-md` overlap because they all target `AGENTS.md`. RepoTune warns and skips `devin` output when `agents-md` or `codex` is enabled, so only one adapter should own that file in a given registry.
+`devin`, `codex`, and `agents-md` overlap because they all target `AGENTS.md`. RepoTune warns and skips `devin` output when `agents-md` or `codex` is enabled. When Devin is intentionally skipped, `doctor` explains which adapter owns `AGENTS.md` and exits `0` after a clean sync.
+
+## Antigravity status
+
+- `IMPLEMENTED`: global rules rendered into `.agents/rules/repotune.md` with an Antigravity managed block
+- `UNSUPPORTED`: mapping arbitrary RepoTune path rules to Antigravity per-file Glob activation
+- `OUT OF SCOPE`: Antigravity workflows
+- Legacy `.agent/rules` is backward-compatible in Antigravity but RepoTune generates the current default `.agents/rules/` path
 
 ## Codex status
 
@@ -98,4 +105,4 @@ repotune sync
 
 ## Versioning
 
-v0.2.0 adds OpenAI Codex and Devin support. See the [v0.2.0 build notes](Build%20specs/repotune-build-spec-v0.2.0.md) for Codex and Devin-specific decisions and the [v0.1.2 build spec](Build%20specs/repotune-build-spec-v0.1.2.md) for the historical MVP baseline.
+v0.2.0 adds OpenAI Codex, Devin, and Google Antigravity support. See the [v0.2.0 build notes](Build%20specs/repotune-build-spec-v0.2.0.md) for adapter-specific decisions and the [v0.1.2 build spec](Build%20specs/repotune-build-spec-v0.1.2.md) for the historical MVP baseline.

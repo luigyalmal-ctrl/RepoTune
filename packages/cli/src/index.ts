@@ -19,7 +19,7 @@ program
 	.description("Initialize RepoTune in this repository")
 	.option(
 		"--agents <ids>",
-		"Comma-separated agents (claude,copilot,cursor,codex,agents-md)",
+		"Comma-separated agents (claude,copilot,cursor,codex,agents-md,devin,antigravity)",
 	)
 	.option("--yes", "Skip confirmation prompts (required to re-init)", false)
 	.action(async (opts: { agents?: string; yes: boolean }) => {

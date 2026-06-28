@@ -139,9 +139,9 @@ describe("Codex doctor behavior", () => {
 describe("Antigravity doctor behavior", () => {
 	it("tracks the antigravity managed block checksum", async () => {
 		await setupRepo(dir, ["antigravity"]);
-		await mkdir(join(dir, ".agents"), { recursive: true });
+		await mkdir(join(dir, ".agents/rules"), { recursive: true });
 		await writeFile(
-			join(dir, ".agents/AGENTS.md"),
+			join(dir, ".agents/rules/repotune.md"),
 			"# Existing instructions\n",
 			"utf8",
 		);
@@ -155,7 +155,10 @@ describe("Antigravity doctor behavior", () => {
 		);
 		expect(antigravityEntry?.checksumMode).toBe("managed-block");
 
-		const content = await readFile(join(dir, ".agents/AGENTS.md"), "utf8");
+		const content = await readFile(
+			join(dir, ".agents/rules/repotune.md"),
+			"utf8",
+		);
 		const inner = extractBlockContent(content, "antigravity");
 		if (!inner || !antigravityEntry)
 			throw new Error("expected antigravity managed block");

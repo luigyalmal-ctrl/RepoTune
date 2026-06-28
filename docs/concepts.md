@@ -11,7 +11,18 @@ Rules are written to this file by `repotune rule add` and read by `repotune sync
 
 If `agents` contains both `codex` and `agents-md`, RepoTune treats that as an overlap. Both adapters target `AGENTS.md`, so `codex` is skipped with warning `CODEX_AGENTS_MD_CONFLICT` to prevent duplicate managed blocks. `agents-md` owns the file; Codex reads the generated `AGENTS.md` at runtime. Skipped Codex output is not written to the lock file, and `repotune doctor` reports Codex as healthy (intentionally skipped), not dirty.
 
-If `agents` contains `devin` alongside `agents-md` or `codex`, RepoTune treats that as an overlap for the same reason: `devin` is skipped with a warning because `AGENTS.md` would otherwise contain duplicate managed blocks.
+If `agents` contains `devin` alongside `agents-md` or `codex`, RepoTune treats that as an overlap for the same reason: `devin` is skipped with warning `DEVIN_AGENTS_MD_CONFLICT`. When skipped, Devin reads the generated `AGENTS.md` at runtime. `repotune doctor` reports Devin as healthy with a message naming the owning adapter.
+
+## Devin and AGENTS.md overlap
+
+When `devin` is enabled with `agents-md` and/or `codex`:
+
+| Concern | Behavior |
+| --- | --- |
+| File ownership | `agents-md` wins over `codex`; only one adapter writes `AGENTS.md` |
+| Devin sync | Skipped; emits `DEVIN_AGENTS_MD_CONFLICT` on plan |
+| Lock file | No Devin entry when output is skipped |
+| Doctor | Devin reported as ✓ "AGENTS.md owned by agents-md" or "owned by codex"; exit 0 |
 
 ## Lock file
 
@@ -104,14 +115,15 @@ Devin reads project rules from `AGENTS.md`, `AGENT.md`, and `CLAUDE.md`, and can
 
 ## Antigravity status
 
-- `IMPLEMENTED`: Antigravity global rule sync to `.agents/AGENTS.md` using `<!-- repotune:start antigravity -->` / `<!-- repotune:end antigravity -->`
-- `UNSUPPORTED`: arbitrary path-scoped globs for Antigravity
+- `IMPLEMENTED`: Antigravity global rule sync to `.agents/rules/repotune.md` using `<!-- repotune:start antigravity -->` / `<!-- repotune:end antigravity -->`
+- `UNSUPPORTED`: mapping arbitrary RepoTune path rules to Antigravity per-file Glob activation in v0.2.0
+- `OUT OF SCOPE`: Antigravity workflows
 
-Antigravity uses a different location (`.agents/AGENTS.md`) than Codex and Devin, so it does not conflict with them.
+Antigravity uses `.agents/rules/` (legacy `.agent/rules` is backward-compatible in Antigravity). This path does not conflict with Codex, Devin, or `agents-md`, which target root `AGENTS.md`.
 
 ## Antigravity path rules
 
-The official Antigravity specification (from Google DeepMind) explicitly confirms there is no native support for path-scoped rules or frontmatter activation. RepoTune does not generate Antigravity path rules in v0.2.0. Unsupported Antigravity path rules emit `ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED`.
+Antigravity supports per-rule Glob activation in the IDE, but RepoTune stores path rules as arbitrary globs without a faithful one-to-one mapping to Antigravity rule files in v0.2.0. Unsupported path rules emit `ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED`.
 
 ## Path handling
 

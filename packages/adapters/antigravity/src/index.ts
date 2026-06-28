@@ -10,19 +10,27 @@ import type {
 	Warning,
 } from "@repotune/schemas";
 
+/** Verified default workspace rules path (see antigravity.google/docs/rules-workflows). */
+export const ANTIGRAVITY_RULES_OUTPUT_PATH = ".agents/rules/repotune.md";
+
 const capabilities: AgentCapabilities = {
 	agentId: "antigravity",
 	supportsGlobalRules: true,
 	supportsPathRules: false,
 	supportsLanguageRules: false,
 	supportsFrameworkRules: false,
-	supportsImports: false,
+	supportsImports: true,
 	supportsSymlinks: false,
 	managedBlockMarker: {
 		start: "<!-- repotune:start antigravity -->",
 		end: "<!-- repotune:end antigravity -->",
 	},
 };
+
+function renderGlobalRules(rules: Rule[]): string {
+	const bullets = rules.map((rule) => `- ${rule.content}`).join("\n");
+	return `# RepoTune Rules\n\n${bullets}`;
+}
 
 async function fileExists(p: string): Promise<boolean> {
 	try {
@@ -37,7 +45,7 @@ export const antigravityAdapter: AgentAdapter = {
 	agentId: "antigravity",
 	capabilities,
 
-	async plan(rules: Rule[], repoRoot: string): Promise<AdapterPlanResult> {
+	async plan(rules: Rule[], _repoRoot: string): Promise<AdapterPlanResult> {
 		const files: GeneratedFile[] = [];
 		const warnings: Warning[] = [];
 		const { managedBlockMarker: marker } = capabilities;
@@ -47,19 +55,19 @@ export const antigravityAdapter: AgentAdapter = {
 		for (const rule of rules.filter((r) => r.scope !== "global")) {
 			warnings.push({
 				code: "ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED",
-				message: `Scope '${rule.scope}' is not supported by the antigravity adapter`,
+				message:
+					"Antigravity path rules are not generated in RepoTune v0.2.0 because RepoTune does not map arbitrary globs to per-file Antigravity rule activation.",
 				agentId: "antigravity",
 				ruleId: rule.id,
 			});
 		}
 
 		if (globalRules.length > 0) {
-			const inner = globalRules.map((r) => `- ${r.content}`).join("\n");
 			files.push({
 				agentId: "antigravity",
-				outputPath: ".agents/AGENTS.md",
+				outputPath: ANTIGRAVITY_RULES_OUTPUT_PATH,
 				strategy: "managed-block",
-				content: inner,
+				content: renderGlobalRules(globalRules),
 				ruleIds: globalRules.map((r) => r.id),
 				managedBlockMarker: marker,
 			});

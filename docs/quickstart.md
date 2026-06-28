@@ -8,7 +8,7 @@ npx repotune init
 
 This creates `.ai/` and prompts you to select which agents to enable. It also adds `.ai/.backups/` and `.ai/state.local.json` to `.gitignore` via a managed block.
 
-If you want OpenAI Codex support, enable `codex`. If you want Devin support, enable `devin`. Do not enable `codex` or `devin` alongside `agents-md` unless you intentionally want `agents-md` to own `AGENTS.md` and the other adapter's output to be skipped.
+If you want OpenAI Codex support, enable `codex`. If you want Devin support, enable `devin`. If you want Google Antigravity support, enable `antigravity`. Do not enable `codex` or `devin` alongside `agents-md` unless you intentionally want `agents-md` to own `AGENTS.md` and the other adapter's output to be skipped.
 
 ## 2. Add rules
 
@@ -53,6 +53,7 @@ repotune sync --agent claude
 repotune sync --agent claude --agent copilot
 repotune sync --agent codex
 repotune sync --agent devin
+repotune sync --agent antigravity
 ```
 
 ## 5. Check health

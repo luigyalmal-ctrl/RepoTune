@@ -10,7 +10,11 @@ import {
 } from "@repotune/adapter-codex";
 import { copilotAdapter } from "@repotune/adapter-copilot";
 import { cursorAdapter } from "@repotune/adapter-cursor";
-import { devinAdapter } from "@repotune/adapter-devin";
+import {
+	devinAdapter,
+	devinAgentsMdOwnerLabel,
+	isDevinSkippedForAgentsMdOwner,
+} from "@repotune/adapter-devin";
 import {
 	detectConflicts,
 	extractBlockContent,
@@ -92,6 +96,19 @@ export async function runDoctor(repoRoot: string): Promise<void> {
 		) {
 			console.log(
 				`${"✓"} ${agentId.padEnd(12)} — AGENTS.md owned by agents-md (Codex reads generated file)`,
+			);
+			continue;
+		}
+
+		if (
+			agentId === "devin" &&
+			isDevinSkippedForAgentsMdOwner(reg.agents) &&
+			(lockFile?.generatedFiles.filter((f) => f.agentId === "devin").length ??
+				0) === 0
+		) {
+			const owner = devinAgentsMdOwnerLabel(reg.agents);
+			console.log(
+				`${"✓"} ${agentId.padEnd(12)} — AGENTS.md owned by ${owner}; Devin reads generated file`,
 			);
 			continue;
 		}

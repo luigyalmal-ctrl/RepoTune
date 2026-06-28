@@ -33,7 +33,7 @@ function parseAgents(raw: string): AgentId[] {
 		const parsed = AgentIdSchema.safeParse(id);
 		if (!parsed.success) {
 			throw new Error(
-				`Unknown agent '${id}'. Valid agents: claude, copilot, cursor, codex, agents-md, devin`,
+				`Unknown agent '${id}'. Valid agents: claude, copilot, cursor, codex, agents-md, devin, antigravity`,
 			);
 		}
 		agents.push(parsed.data);
@@ -78,6 +78,7 @@ export async function runInit(
 				{ name: "OpenAI Codex", value: "codex", checked: false },
 				{ name: "AGENTS.md", value: "agents-md", checked: true },
 				{ name: "Devin", value: "devin", checked: false },
+				{ name: "Google Antigravity", value: "antigravity", checked: false },
 			],
 		}));
 

@@ -419,6 +419,40 @@ describe("CLI integration", () => {
 		await expect(access(join(dir, "AGENTS.md"))).rejects.toThrow();
 	});
 
+	it("sync with devin and agents-md writes one agents-md block and doctor passes", async () => {
+		await setupRepo(dir, ["devin", "agents-md"]);
+		await addRule(
+			makeRule("use-pnpm", { content: "Use pnpm, never npm." }),
+			dir,
+		);
+
+		const { status: syncStatus, stdout: syncStdout } = runCli(
+			["sync", "--yes"],
+			dir,
+		);
+		expect(syncStatus).toBe(0);
+		expect(syncStdout).toContain("DEVIN_AGENTS_MD_CONFLICT");
+
+		const content = await readFile(join(dir, "AGENTS.md"), "utf8");
+		expect(content).toContain("<!-- repotune:start agents-md -->");
+		expect(content).not.toContain("<!-- repotune:start devin -->");
+		expect(content.split("<!-- repotune:start agents-md -->").length - 1).toBe(
+			1,
+		);
+
+		const lock = await loadLock(dir);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "devin")).toBe(false);
+
+		const { status: doctorStatus, stdout: doctorStdout } = runCli(
+			["doctor"],
+			dir,
+		);
+		expect(doctorStatus).toBe(0);
+		expect(doctorStdout).toContain(
+			"AGENTS.md owned by agents-md; Devin reads generated file",
+		);
+	});
+
 	it("doctor after deleting devin-generated AGENTS.md exits 4", async () => {
 		await setupRepo(dir, ["devin"]);
 		await addRule(
@@ -597,7 +631,7 @@ describe("CLI integration", () => {
 		expect(stdout).toContain("Agents: antigravity");
 	});
 
-	it("sync --agent antigravity writes .agents/AGENTS.md with an antigravity managed block", async () => {
+	it("sync --agent antigravity writes .agents/rules/repotune.md with an antigravity managed block", async () => {
 		await setupRepo(dir, ["antigravity"]);
 		await addRule(makeRule("use-pnpm"), dir);
 		const { status, stdout } = runCli(
@@ -607,8 +641,12 @@ describe("CLI integration", () => {
 		expect(status).toBe(0);
 		expect(stdout).toContain("1 file(s)");
 
-		const content = await readFile(join(dir, ".agents/AGENTS.md"), "utf8");
+		const content = await readFile(
+			join(dir, ".agents/rules/repotune.md"),
+			"utf8",
+		);
 		expect(content).toContain("<!-- repotune:start antigravity -->");
+		expect(content).toContain("# RepoTune Rules");
 		expect(content).toContain("- # use-pnpm");
 	});
 
@@ -621,17 +659,28 @@ describe("CLI integration", () => {
 		);
 		expect(status).toBe(0);
 		expect(stdout).toContain("Dry run: 1 file(s) would change");
-		await expect(access(join(dir, ".agents/AGENTS.md"))).rejects.toThrow();
+		await expect(
+			access(join(dir, ".agents/rules/repotune.md")),
+		).rejects.toThrow();
 	});
 
-	it("doctor after deleting antigravity-generated AGENTS.md exits 4", async () => {
+	it("doctor exits 0 after clean antigravity sync", async () => {
+		await setupRepo(dir, ["antigravity"]);
+		await addRule(makeRule("use-pnpm"), dir);
+		expect(
+			runCli(["sync", "--yes", "--agent", "antigravity"], dir).status,
+		).toBe(0);
+		expect(runCli(["doctor"], dir).status).toBe(0);
+	});
+
+	it("doctor after deleting antigravity-generated rules file exits 4", async () => {
 		await setupRepo(dir, ["antigravity"]);
 		await addRule(makeRule("use-pnpm"), dir);
 		runCli(["sync", "--yes", "--agent", "antigravity"], dir);
 
-		await unlink(join(dir, ".agents/AGENTS.md"));
+		await unlink(join(dir, ".agents/rules/repotune.md"));
 		const { status, stdout } = runCli(["doctor"], dir);
 		expect(status).toBe(4);
-		expect(stdout).toContain(".agents/AGENTS.md");
+		expect(stdout).toContain(".agents/rules/repotune.md");
 	});
 });

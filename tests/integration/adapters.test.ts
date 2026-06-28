@@ -261,13 +261,17 @@ describe("Devin adapter", () => {
 });
 
 describe("Antigravity adapter", () => {
-	it("creates .agents/AGENTS.md with an antigravity managed block for global rules", async () => {
+	it("creates .agents/rules/repotune.md with an antigravity managed block for global rules", async () => {
 		await setupRepo(dir, ["antigravity"]);
 		const rules = [makeRule("use-pnpm", { content: "Use pnpm, never npm." })];
 		await doSync(dir, rules, ["antigravity"]);
 
-		const content = await readFile(join(dir, ".agents/AGENTS.md"), "utf8");
+		const content = await readFile(
+			join(dir, ".agents/rules/repotune.md"),
+			"utf8",
+		);
 		expect(content).toContain("<!-- repotune:start antigravity -->");
+		expect(content).toContain("# RepoTune Rules");
 		expect(content).toContain("- Use pnpm, never npm.");
 		expect(content).toContain("<!-- repotune:end antigravity -->");
 	});

@@ -5,6 +5,7 @@ import {
 	type AdapterValidationContext,
 	type AgentAdapter,
 	type AgentCapabilities,
+	type AgentId,
 	type GeneratedFile,
 	RegistrySchema,
 	type Rule,
@@ -32,6 +33,26 @@ async function fileExists(p: string): Promise<boolean> {
 	} catch {
 		return false;
 	}
+}
+
+/** True when Devin is enabled alongside an adapter that owns AGENTS.md. */
+export function isDevinSkippedForAgentsMdOwner(
+	agents: readonly AgentId[],
+): boolean {
+	return (
+		agents.includes("devin") &&
+		(agents.includes("agents-md") || agents.includes("codex"))
+	);
+}
+
+/** Which adapter owns AGENTS.md when Devin output is skipped; agents-md wins over codex. */
+export function devinAgentsMdOwnerLabel(
+	agents: readonly AgentId[],
+): "agents-md" | "codex" | null {
+	if (!isDevinSkippedForAgentsMdOwner(agents)) return null;
+	if (agents.includes("agents-md")) return "agents-md";
+	if (agents.includes("codex")) return "codex";
+	return null;
 }
 
 async function hasAgentsMdOverlap(repoRoot: string): Promise<boolean> {

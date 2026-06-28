@@ -4,33 +4,34 @@ All notable changes to RepoTune are documented in this file.
 
 ## 0.2.0
 
-- Added first-class `codex` agent support with `repotune sync --agent codex`
-- Added `@repotune/adapter-codex`
-- Codex global rules now render into `AGENTS.md` with a Codex-specific managed block
-- Codex path-scoped rules now emit `CODEX_PATH_SCOPE_NOT_SUPPORTED` instead of generating inaccurate nested files
-- RepoTune now warns and skips Codex output when `agents-md` is also enabled, preventing duplicate `AGENTS.md` blocks
-- Codex + agents-md overlap: `agents-md` owns `AGENTS.md`, Codex reads the generated file, no false Codex lock entry, and `doctor` reports Codex as intentionally skipped (exit 0)
-- Added first-class `devin` agent support with `repotune sync --agent devin`
-- Added `@repotune/adapter-devin`
-- Devin global rules now render into `AGENTS.md` with a Devin-specific managed block
-- Devin path-scoped rules now emit `DEVIN_PATH_SCOPE_NOT_SUPPORTED` because Devin has no native project glob-scoped rule format
-- RepoTune now warns and skips Devin output when `agents-md` or `codex` is also enabled, preventing duplicate `AGENTS.md` blocks
-- Added first-class `antigravity` agent support with `repotune sync --agent antigravity`
-- Added `@repotune/adapter-antigravity`
-- Antigravity global rules now render into `.agents/AGENTS.md` with an Antigravity-specific managed block
-- Antigravity path-scoped rules now emit `ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED` because Antigravity has no native project glob-scoped rule format
-- Updated CLI, integration tests, and docs for Codex, Devin, and Antigravity support
+### Added
+
+- Added Codex adapter support through `AGENTS.md`.
+- Added Devin adapter support through `AGENTS.md`.
+- Added Antigravity adapter support through `.agents/rules/repotune.md`.
+- Added `@repotune/adapter-codex`, `@repotune/adapter-devin`, and `@repotune/adapter-antigravity`.
+- First-class CLI support: `repotune init --agents antigravity`, `repotune sync --agent antigravity`, and interactive init choice for Google Antigravity.
+
+### Changed
+
+- Documented shared `AGENTS.md` ownership behavior for Codex, Devin, and `agents-md`.
+- Improved `doctor` output for Codex and Devin when intentionally satisfied by another `AGENTS.md` owner (exit 0, clear message).
+- Codex + agents-md overlap: `agents-md` owns `AGENTS.md`, Codex reads the generated file, no false Codex lock entry.
+
+### Fixed
+
+- Corrected Antigravity output path from `.agents/AGENTS.md` to `.agents/rules/repotune.md` to match [official Antigravity rules documentation](https://antigravity.google/docs/rules-workflows).
+- Added Antigravity to CLI init choices and `--agents` help text.
+- Devin `doctor` no longer reports "not synced yet" when Devin is intentionally skipped due to `AGENTS.md` overlap.
 
 ### Documentation status
 
 - `IMPLEMENTED`: Codex global rule sync
-- `PARTIAL`: Codex compatibility with nested instructions is documented, but RepoTune does not yet map arbitrary glob rules into nested files
-- `PLANNED`: safe directory-mappable Codex path rule support, if a future spec defines it clearly
+- `PARTIAL`: Codex nested instructions documented; RepoTune does not map arbitrary glob rules into nested files
 - `IMPLEMENTED`: Devin global rule sync
 - `UNSUPPORTED`: Devin path-scoped rules in v0.2.0
-- `PLANNED`: Devin `.devin/config.json` import configuration, if a future spec defines safe project-level defaults
-- `IMPLEMENTED`: Antigravity global rule sync
-- `UNSUPPORTED`: Antigravity path-scoped rules in v0.2.0
+- `IMPLEMENTED`: Antigravity global rule sync to `.agents/rules/repotune.md`
+- `UNSUPPORTED`: Antigravity path-rule mapping and workflows in v0.2.0
 
 ## 0.1.2
 

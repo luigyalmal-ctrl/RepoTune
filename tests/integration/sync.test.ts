@@ -543,11 +543,11 @@ describe("Devin sync behavior", () => {
 });
 
 describe("Antigravity adapter in sync engine", () => {
-	it("rollback restores antigravity-managed AGENTS.md changes", async () => {
+	it("rollback restores antigravity-managed rules file changes", async () => {
 		await setupRepo(dir, ["antigravity"]);
-		await mkdir(join(dir, ".agents"), { recursive: true });
+		await mkdir(join(dir, ".agents/rules"), { recursive: true });
 		const original = "# Some Existing Manual Rule\n\n- Do things.\n";
-		await writeFile(join(dir, ".agents/AGENTS.md"), original, "utf8");
+		await writeFile(join(dir, ".agents/rules/repotune.md"), original, "utf8");
 
 		const rules = [makeRule("use-pnpm")];
 		const { backupPath } = await doSync(dir, rules, ["antigravity"]);
@@ -555,7 +555,7 @@ describe("Antigravity adapter in sync engine", () => {
 		const { restoreBackup } = await import("@repotune/core");
 		await restoreBackup(backupPath, dir);
 
-		expect(await readFile(join(dir, ".agents/AGENTS.md"), "utf8")).toBe(
+		expect(await readFile(join(dir, ".agents/rules/repotune.md"), "utf8")).toBe(
 			original,
 		);
 	});
