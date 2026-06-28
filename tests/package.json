@@ -1,17 +1,19 @@
 {
-  "name": "@repotune/integration-tests",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "@repotune/adapter-agents-md": "workspace:*",
-    "@repotune/adapter-claude": "workspace:*",
-    "@repotune/adapter-copilot": "workspace:*",
-    "@repotune/adapter-cursor": "workspace:*",
-    "@repotune/core": "workspace:*",
-    "@repotune/schemas": "workspace:*",
-    "vitest": "^2.0.0"
-  }
+	"name": "@repotune/integration-tests",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"pretest": "pnpm --filter @repotune/cli build",
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"@repotune/adapter-agents-md": "workspace:*",
+		"@repotune/adapter-claude": "workspace:*",
+		"@repotune/adapter-copilot": "workspace:*",
+		"@repotune/adapter-cursor": "workspace:*",
+		"@repotune/cli": "workspace:*",
+		"@repotune/core": "workspace:*",
+		"@repotune/schemas": "workspace:*",
+		"vitest": "^2.0.0"
+	}
 }

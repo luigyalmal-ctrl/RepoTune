@@ -153,6 +153,9 @@ importers:
       '@repotune/adapter-cursor':
         specifier: workspace:*
         version: link:../packages/adapters/cursor
+      '@repotune/cli':
+        specifier: workspace:*
+        version: link:../packages/cli
       '@repotune/core':
         specifier: workspace:*
         version: link:../packages/core

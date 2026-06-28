@@ -1,11 +1,11 @@
 {
 	"version": "0.1.2",
 	"createdAt": "2024-01-15T10:00:00.000Z",
-	"updatedAt": "2024-01-15T10:30:00.000Z",
+	"updatedAt": "2024-01-15T10:05:00.000Z",
 	"agents": ["claude", "copilot", "cursor", "agents-md"],
 	"rules": [
 		{
-			"id": "use-pnpm",
+			"id": "use-pnpm-a3f2",
 			"content": "Use pnpm, never npm.",
 			"scope": "global",
 			"createdAt": "2024-01-15T10:05:00.000Z",

@@ -1,11 +1,23 @@
-export { render } from './managed-block-renderer';
-export { detectConflicts } from './conflict-detector';
-export { findRepoRoot, toRepoRelative, toAbsolute } from './path-resolver';
-export { loadRegistry, saveRegistry, initRegistry, addRule, getRules, ruleIdExists } from './registry';
-export { loadLock, saveLock } from './lock';
-export { loadLocalState, saveLocalState } from './local-state';
-export { createBackup, restoreBackup, listBackups } from './backup-manager';
-export { readFileSafe, writeGeneratedFile } from './file-writer';
-export { computeDiff } from './diff-engine';
-export { createSyncEngine } from './sync-engine';
-export type { SyncOptions, SyncResult } from './sync-engine';
+export { render, extractBlockContent } from "./managed-block-renderer";
+export { detectConflicts } from "./conflict-detector";
+export { findRepoRoot, toRepoRelative, toAbsolute } from "./path-resolver";
+export {
+	loadRegistry,
+	saveRegistry,
+	initRegistry,
+	addRule,
+	getRules,
+	ruleIdExists,
+} from "./registry";
+export { loadLock, saveLock } from "./lock";
+export { loadLocalState, saveLocalState } from "./local-state";
+export { createBackup, restoreBackup, listBackups } from "./backup-manager";
+export {
+	readFileSafe,
+	writeGeneratedFile,
+	getUnsafeWriteWarning,
+	skippedPathsFromWarnings,
+} from "./file-writer";
+export { computeDiff } from "./diff-engine";
+export { createSyncEngine } from "./sync-engine";
+export type { SyncOptions, SyncResult } from "./sync-engine";

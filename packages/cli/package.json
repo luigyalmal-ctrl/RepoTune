@@ -1,25 +1,25 @@
 {
-  "name": "@repotune/cli",
-  "version": "0.1.2",
-  "type": "module",
-  "files": ["dist"],
-  "bin": { "repotune": "./dist/index.js" },
-  "scripts": {
-    "build": "tsup"
-  },
-  "dependencies": {
-    "@inquirer/prompts": "^7.0.0",
-    "@repotune/adapter-agents-md": "workspace:*",
-    "@repotune/adapter-claude": "workspace:*",
-    "@repotune/adapter-copilot": "workspace:*",
-    "@repotune/adapter-cursor": "workspace:*",
-    "@repotune/core": "workspace:*",
-    "@repotune/schemas": "workspace:*",
-    "commander": "^13.0.0",
-    "diff": "^5.2.0"
-  },
-  "devDependencies": {
-    "@types/diff": "^5.2.0",
-    "tsup": "^8.0.0"
-  }
+	"name": "@repotune/cli",
+	"version": "0.1.2",
+	"type": "module",
+	"files": ["dist"],
+	"bin": { "repotune": "./dist/index.js" },
+	"scripts": {
+		"build": "tsup"
+	},
+	"dependencies": {
+		"@inquirer/prompts": "^7.0.0",
+		"@repotune/adapter-agents-md": "workspace:*",
+		"@repotune/adapter-claude": "workspace:*",
+		"@repotune/adapter-copilot": "workspace:*",
+		"@repotune/adapter-cursor": "workspace:*",
+		"@repotune/core": "workspace:*",
+		"@repotune/schemas": "workspace:*",
+		"commander": "^13.0.0",
+		"diff": "^5.2.0"
+	},
+	"devDependencies": {
+		"@types/diff": "^5.2.0",
+		"tsup": "^8.0.0"
+	}
 }

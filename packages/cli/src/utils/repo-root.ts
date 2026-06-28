@@ -1,5 +1,5 @@
-import { findRepoRoot } from '@repotune/core';
+import { findRepoRoot } from "@repotune/core";
 
 export function getRepoRoot(): string {
-  return findRepoRoot(process.cwd());
+	return findRepoRoot(process.cwd());
 }
