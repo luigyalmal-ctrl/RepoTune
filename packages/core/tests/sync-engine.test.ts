@@ -231,3 +231,62 @@ describe("unsafe write skipping", () => {
 		expect(result.backupPath).toBe("");
 	});
 });
+
+describe("partial agent sync", () => {
+	it("preserves lock entries for agents not in --agent sync", async () => {
+		await initRegistry(dir, ["claude", "copilot"]);
+		const rule = makeRule("shared");
+		await addRule(rule, dir);
+
+		const claudeFile: GeneratedFile = {
+			agentId: "claude",
+			outputPath: "CLAUDE.md",
+			strategy: "create",
+			content: rule.content,
+			ruleIds: [rule.id],
+		};
+		const copilotFile: GeneratedFile = {
+			agentId: "copilot",
+			outputPath: ".github/copilot-instructions.md",
+			strategy: "create",
+			content: rule.content,
+			ruleIds: [rule.id],
+		};
+		const adapters = new Map<AgentId, AgentAdapter>([
+			["claude", makeAdapter("claude", [claudeFile])],
+			["copilot", makeAdapter("copilot", [copilotFile])],
+		]);
+		const engine = createSyncEngine(adapters);
+
+		const fullPreview = await engine.planSync([rule], {
+			agents: ["claude", "copilot"],
+			repoRoot: dir,
+		});
+		await engine.applySync(fullPreview, {
+			agents: ["claude", "copilot"],
+			repoRoot: dir,
+		});
+
+		let lock = await loadLock(dir);
+		expect(lock?.generatedFiles).toHaveLength(2);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "copilot")).toBe(
+			true,
+		);
+
+		const partialPreview = await engine.planSync([rule], {
+			agents: ["claude"],
+			repoRoot: dir,
+		});
+		await engine.applySync(partialPreview, {
+			agents: ["claude"],
+			repoRoot: dir,
+		});
+
+		lock = await loadLock(dir);
+		expect(lock?.generatedFiles).toHaveLength(2);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "copilot")).toBe(
+			true,
+		);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "claude")).toBe(true);
+	});
+});

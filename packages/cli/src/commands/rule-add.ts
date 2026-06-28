@@ -1,6 +1,6 @@
 import { editor, input, select } from "@inquirer/prompts";
 import { addRule, ruleIdExists } from "@repotune/core";
-import type { Rule } from "@repotune/schemas";
+import type { Rule, RuleScope } from "@repotune/schemas";
 
 function slugify(content: string): string {
 	return content
@@ -29,26 +29,50 @@ async function generateId(content: string, repoRoot: string): Promise<string> {
 	throw new Error("Could not generate unique rule ID after 5 attempts");
 }
 
+export interface RuleAddOptions {
+	scope?: RuleScope;
+	path?: string;
+}
+
 export async function runRuleAdd(
 	repoRoot: string,
 	rawContent?: string,
+	opts: RuleAddOptions = {},
 ): Promise<void> {
 	const content = rawContent ?? (await editor({ message: "Rule content:" }));
 
-	const scope = await select({
-		message: "Scope?",
-		choices: [
-			{ name: "global — applies to all files", value: "global" as const },
-			{
-				name: "path — applies to specific file patterns",
-				value: "path" as const,
-			},
-		],
-	});
+	let scope: RuleScope;
+	if (opts.scope) {
+		if (opts.scope !== "global" && opts.scope !== "path") {
+			throw new Error(
+				`Invalid scope '${opts.scope}'. v0.1.2 supports: global, path`,
+			);
+		}
+		scope = opts.scope;
+	} else {
+		scope = await select({
+			message: "Scope?",
+			choices: [
+				{ name: "global — applies to all files", value: "global" as const },
+				{
+					name: "path — applies to specific file patterns",
+					value: "path" as const,
+				},
+			],
+		});
+	}
 
 	let pathPattern: string | undefined;
 	if (scope === "path") {
-		pathPattern = await input({ message: "Glob pattern (e.g. src/**/*.ts):" });
+		if (opts.path) {
+			pathPattern = opts.path;
+		} else if (opts.scope) {
+			throw new Error("path scope requires --path <glob>");
+		} else {
+			pathPattern = await input({
+				message: "Glob pattern (e.g. src/**/*.ts):",
+			});
+		}
 	}
 
 	const now = new Date().toISOString();

@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { addRule, loadLock, loadRegistry } from "@repotune/core";
+import { RegistrySchema } from "@repotune/schemas";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { makeRule, setupRepo } from "./helpers";
 
@@ -43,6 +44,96 @@ afterEach(async () => {
 });
 
 describe("CLI integration", () => {
+	it("init --agents --yes creates .ai/ with valid registry and gitignore block", async () => {
+		const { status, stdout } = runCli(
+			["init", "--agents", "claude,copilot,cursor,agents-md", "--yes"],
+			dir,
+		);
+		expect(status).toBe(0);
+		expect(stdout).toContain("RepoTune initialized");
+
+		const reg = await loadRegistry(dir);
+		expect(() => RegistrySchema.parse(reg)).not.toThrow();
+		expect(reg.agents).toEqual(["claude", "copilot", "cursor", "agents-md"]);
+
+		const gi = await readFile(join(dir, ".gitignore"), "utf8");
+		expect(gi).toContain("<!-- repotune:start gitignore -->");
+		expect(gi).toContain(".ai/.backups/");
+	});
+
+	it("init twice keeps gitignore block exactly once", async () => {
+		expect(runCli(["init", "--agents", "claude", "--yes"], dir).status).toBe(0);
+		expect(runCli(["init", "--agents", "claude", "--yes"], dir).status).toBe(0);
+
+		const gi = await readFile(join(dir, ".gitignore"), "utf8");
+		expect(gi.split("<!-- repotune:start gitignore -->").length - 1).toBe(1);
+	});
+
+	it("rule add --scope global adds rule to registry", async () => {
+		await setupRepo(dir);
+		const { status, stdout } = runCli(
+			["rule", "add", "Use pnpm, never npm.", "--scope", "global"],
+			dir,
+		);
+		expect(status).toBe(0);
+		expect(stdout).toContain("Rule added:");
+
+		const reg = await loadRegistry(dir);
+		expect(reg.rules).toHaveLength(1);
+		expect(reg.rules[0].scope).toBe("global");
+		expect(reg.rules[0].content).toBe("Use pnpm, never npm.");
+	});
+
+	it("rule add --scope path --path adds path rule", async () => {
+		await setupRepo(dir);
+		expect(
+			runCli(
+				[
+					"rule",
+					"add",
+					"Use strict TS",
+					"--scope",
+					"path",
+					"--path",
+					"src/**/*.ts",
+				],
+				dir,
+			).status,
+		).toBe(0);
+
+		const reg = await loadRegistry(dir);
+		expect(reg.rules).toHaveLength(1);
+		expect(reg.rules[0].scope).toBe("path");
+		expect(reg.rules[0].pathPattern).toBe("src/**/*.ts");
+	});
+
+	it("sync --agent preserves lock entries for other agents", async () => {
+		await setupRepo(dir);
+		await addRule(makeRule("use-pnpm"), dir);
+		expect(runCli(["sync", "--yes"], dir).status).toBe(0);
+
+		let lock = await loadLock(dir);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "copilot")).toBe(
+			true,
+		);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "cursor")).toBe(true);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "agents-md")).toBe(
+			true,
+		);
+
+		expect(runCli(["sync", "--yes", "--agent", "claude"], dir).status).toBe(0);
+
+		lock = await loadLock(dir);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "copilot")).toBe(
+			true,
+		);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "cursor")).toBe(true);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "agents-md")).toBe(
+			true,
+		);
+		expect(lock?.generatedFiles.some((f) => f.agentId === "claude")).toBe(true);
+	});
+
 	it("--help lists all main commands", () => {
 		const { status, stdout } = runCli(["--help"], dir);
 		expect(status).toBe(0);

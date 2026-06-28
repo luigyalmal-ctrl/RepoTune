@@ -10,6 +10,7 @@ import type {
 	SyncPreview,
 	Warning,
 } from "@repotune/schemas";
+import { diffLines } from "diff";
 import { createBackup } from "./backup-manager";
 import { detectConflicts } from "./conflict-detector";
 import { computeDiff } from "./diff-engine";
@@ -85,8 +86,38 @@ function adjustDiffForSkipped(
 		return { ...f, hasChanges: false, after: f.before ?? f.after };
 	});
 
-	const totalUnchanged = files.filter((f) => !f.hasChanges).length;
-	return { ...diff, files, totalUnchanged };
+	let totalAdded = 0;
+	let totalRemoved = 0;
+	let totalUnchanged = 0;
+	for (const f of files) {
+		if (!f.hasChanges) {
+			totalUnchanged++;
+			continue;
+		}
+		const changes = diffLines(f.before ?? "", f.after);
+		totalAdded += changes
+			.filter((c) => c.added)
+			.reduce((s, c) => s + (c.count ?? 0), 0);
+		totalRemoved += changes
+			.filter((c) => c.removed)
+			.reduce((s, c) => s + (c.count ?? 0), 0);
+	}
+
+	return { files, totalAdded, totalRemoved, totalUnchanged };
+}
+
+function mergeLockEntries(
+	previous: LockGeneratedFile[],
+	lockEntries: LockGeneratedFile[],
+	syncedAgents: AgentId[],
+): LockGeneratedFile[] {
+	const preserved = previous.filter(
+		(entry) => !syncedAgents.includes(entry.agentId),
+	);
+	return [...preserved, ...lockEntries].sort((a, b) => {
+		const d = a.agentId.localeCompare(b.agentId);
+		return d !== 0 ? d : a.path.localeCompare(b.path);
+	});
 }
 
 export function createSyncEngine(adapters: Map<AgentId, AgentAdapter>) {
@@ -197,8 +228,15 @@ export function createSyncEngine(adapters: Map<AgentId, AgentAdapter>) {
 			});
 		}
 
+		const previous = lockFile?.generatedFiles ?? [];
+		const nextGeneratedFiles = mergeLockEntries(
+			previous,
+			lockEntries,
+			opts.agents,
+		);
+
 		await saveLock(
-			{ version: "0.1.2", lastSyncAt: now, generatedFiles: lockEntries },
+			{ version: "0.1.2", lastSyncAt: now, generatedFiles: nextGeneratedFiles },
 			opts.repoRoot,
 		);
 		if (backupPath) {

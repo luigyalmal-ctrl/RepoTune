@@ -2,7 +2,7 @@ import { findRepoRoot } from "@repotune/core";
 import type { AgentId } from "@repotune/schemas";
 import { Command } from "commander";
 import { runDoctor } from "./commands/doctor";
-import { runInit } from "./commands/init";
+import { parseAgents, runInit } from "./commands/init";
 import { runRollback } from "./commands/rollback";
 import { runRuleAdd } from "./commands/rule-add";
 import { runRuleList } from "./commands/rule-list";
@@ -17,9 +17,22 @@ program
 program
 	.command("init")
 	.description("Initialize RepoTune in this repository")
-	.action(async () => {
+	.option(
+		"--agents <ids>",
+		"Comma-separated agents (claude,copilot,cursor,agents-md)",
+	)
+	.option("--yes", "Skip confirmation prompts (required to re-init)", false)
+	.action(async (opts: { agents?: string; yes: boolean }) => {
 		const root = findRepoRoot(process.cwd());
-		await runInit(root);
+		try {
+			await runInit(root, {
+				agents: opts.agents ? parseAgents(opts.agents) : undefined,
+				yes: opts.yes,
+			});
+		} catch (err) {
+			console.error(`Error: ${(err as Error).message}`);
+			process.exit(2);
+		}
 	});
 
 const rule = program.command("rule").description("Manage rules");
@@ -27,10 +40,25 @@ const rule = program.command("rule").description("Manage rules");
 rule
 	.command("add [content]")
 	.description("Add a new rule")
-	.action(async (content?: string) => {
-		const root = findRepoRoot(process.cwd());
-		await runRuleAdd(root, content);
-	});
+	.option("--scope <scope>", "Rule scope: global or path")
+	.option("--path <glob>", "Glob pattern (required when scope is path)")
+	.action(
+		async (
+			content: string | undefined,
+			opts: { scope?: string; path?: string },
+		) => {
+			const root = findRepoRoot(process.cwd());
+			try {
+				await runRuleAdd(root, content, {
+					scope: opts.scope as "global" | "path" | undefined,
+					path: opts.path,
+				});
+			} catch (err) {
+				console.error(`Error: ${(err as Error).message}`);
+				process.exit(2);
+			}
+		},
+	);
 
 rule
 	.command("list")
