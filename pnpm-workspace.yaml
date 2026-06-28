@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'packages/adapters/*'
+  - 'tests'
 allowBuilds:
   '@biomejs/biome': true
   esbuild: true

@@ -1,0 +1,8 @@
+{
+  "id": "ts-strict",
+  "content": "Use strict TypeScript.",
+  "scope": "path",
+  "pathPattern": "src/**/*.ts",
+  "createdAt": "2024-01-15T10:10:00.000Z",
+  "updatedAt": "2024-01-15T10:10:00.000Z"
+}

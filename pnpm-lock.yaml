@@ -139,6 +139,30 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.43)
 
+  tests:
+    devDependencies:
+      '@repotune/adapter-agents-md':
+        specifier: workspace:*
+        version: link:../packages/adapters/agents-md
+      '@repotune/adapter-claude':
+        specifier: workspace:*
+        version: link:../packages/adapters/claude
+      '@repotune/adapter-copilot':
+        specifier: workspace:*
+        version: link:../packages/adapters/copilot
+      '@repotune/adapter-cursor':
+        specifier: workspace:*
+        version: link:../packages/adapters/cursor
+      '@repotune/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@repotune/schemas':
+        specifier: workspace:*
+        version: link:../packages/schemas
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.43)
+
 packages:
 
   '@biomejs/biome@1.9.4':
