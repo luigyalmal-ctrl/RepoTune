@@ -27,7 +27,9 @@ The files it manages are deterministic and documented:
 
 ## Dry-run guarantee
 
-`repotune sync --dry-run` and `repotune sync --diff` compute what would change but write zero files. The only I/O is reading existing files to compute the diff.
+`repotune sync --dry-run` computes the preview and writes zero files.
+
+`repotune sync --diff` shows the file-by-file diff before applying changes. It is not a dry-run mode by itself; if the user confirms, or if `--yes` is passed, RepoTune will apply the sync after showing the diff.
 
 ## Backup guarantee
 
