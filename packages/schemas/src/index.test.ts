@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { GeneratedFileSchema, LockFileSchema, RuleSchema } from "./index";
+import {
+	AgentIdSchema,
+	GeneratedFileSchema,
+	LockFileSchema,
+	RuleSchema,
+} from "./index";
+
+describe("AgentIdSchema", () => {
+	it("parses codex as a supported agent", () => {
+		expect(AgentIdSchema.parse("codex")).toBe("codex");
+	});
+
+	it("parses devin as a supported agent", () => {
+		expect(AgentIdSchema.parse("devin")).toBe("devin");
+	});
+});
 
 describe("RuleSchema", () => {
 	it("parses a valid global rule", () => {
@@ -73,7 +88,7 @@ describe("LockFileSchema", () => {
 	it("parses with generatedFiles array format", () => {
 		expect(() =>
 			LockFileSchema.parse({
-				version: "0.1.2",
+				version: "0.2.0",
 				lastSyncAt: "2024-01-15T10:30:00Z",
 				generatedFiles: [
 					{

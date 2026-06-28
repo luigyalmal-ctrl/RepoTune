@@ -35,7 +35,7 @@ describe("initRegistry", () => {
 		const reg = await initRegistry(dir, ["claude"]);
 		expect(reg.rules).toHaveLength(0);
 		expect(reg.agents).toEqual(["claude"]);
-		expect(reg.version).toBe("0.1.2");
+		expect(reg.version).toBe("0.2.0");
 	});
 });
 

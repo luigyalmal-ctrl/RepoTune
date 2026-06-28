@@ -24,7 +24,7 @@ export async function initRegistry(
 ): Promise<Registry> {
 	const now = new Date().toISOString();
 	const reg: Registry = {
-		version: "0.1.2",
+		version: "0.2.0",
 		createdAt: now,
 		updatedAt: now,
 		agents,

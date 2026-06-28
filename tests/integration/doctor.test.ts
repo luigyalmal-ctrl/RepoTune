@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm, unlink, writeFile } from "node:fs/promises";
+import {
+	mkdir,
+	mkdtemp,
+	readFile,
+	rm,
+	unlink,
+	writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { extractBlockContent, loadLock } from "@repotune/core";
@@ -101,5 +108,57 @@ describe("I-13: manual content outside block does not trigger dirty", () => {
 
 		// Checksum of inner block content should still match lock
 		expect(sha256(inner)).toBe(claudeEntry.checksum);
+	});
+});
+
+describe("Codex doctor behavior", () => {
+	it("tracks the codex managed block checksum", async () => {
+		await setupRepo(dir, ["codex"]);
+		await writeFile(
+			join(dir, "AGENTS.md"),
+			"# Existing instructions\n",
+			"utf8",
+		);
+
+		const rules = [makeRule("use-pnpm", { content: "Use pnpm, never npm." })];
+		await doSync(dir, rules, ["codex"]);
+
+		const lock = await loadLock(dir);
+		const codexEntry = lock?.generatedFiles.find(
+			(file) => file.agentId === "codex",
+		);
+		expect(codexEntry?.checksumMode).toBe("managed-block");
+
+		const content = await readFile(join(dir, "AGENTS.md"), "utf8");
+		const inner = extractBlockContent(content, "codex");
+		if (!inner || !codexEntry) throw new Error("expected codex managed block");
+		expect(sha256(inner)).toBe(codexEntry.checksum);
+	});
+});
+
+describe("Antigravity doctor behavior", () => {
+	it("tracks the antigravity managed block checksum", async () => {
+		await setupRepo(dir, ["antigravity"]);
+		await mkdir(join(dir, ".agents"), { recursive: true });
+		await writeFile(
+			join(dir, ".agents/AGENTS.md"),
+			"# Existing instructions\n",
+			"utf8",
+		);
+
+		const rules = [makeRule("use-pnpm", { content: "Use pnpm, never npm." })];
+		await doSync(dir, rules, ["antigravity"]);
+
+		const lock = await loadLock(dir);
+		const antigravityEntry = lock?.generatedFiles.find(
+			(file) => file.agentId === "antigravity",
+		);
+		expect(antigravityEntry?.checksumMode).toBe("managed-block");
+
+		const content = await readFile(join(dir, ".agents/AGENTS.md"), "utf8");
+		const inner = extractBlockContent(content, "antigravity");
+		if (!inner || !antigravityEntry)
+			throw new Error("expected antigravity managed block");
+		expect(sha256(inner)).toBe(antigravityEntry.checksum);
 	});
 });

@@ -5,7 +5,10 @@ export const AgentIdSchema = z.enum([
 	"claude",
 	"copilot",
 	"cursor",
+	"codex",
 	"agents-md",
+	"devin",
+	"antigravity",
 ]);
 export type AgentId = z.infer<typeof AgentIdSchema>;
 
@@ -13,9 +16,9 @@ export type AgentId = z.infer<typeof AgentIdSchema>;
 export const RuleScopeSchema = z.enum([
 	"global",
 	"path",
-	"language", // defined for future use; not exposed in v0.1.2 CLI
-	"framework", // defined for future use; not exposed in v0.1.2 CLI
-	"agent", // defined for future use; not exposed in v0.1.2 CLI
+	"language", // defined for future use; not exposed in the v0.2.0 CLI
+	"framework", // defined for future use; not exposed in the v0.2.0 CLI
+	"agent", // defined for future use; not exposed in the v0.2.0 CLI
 ]);
 export type RuleScope = z.infer<typeof RuleScopeSchema>;
 

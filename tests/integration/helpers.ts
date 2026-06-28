@@ -1,9 +1,12 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { agentsMdAdapter } from "@repotune/adapter-agents-md";
+import { antigravityAdapter } from "@repotune/adapter-antigravity";
 import { claudeAdapter } from "@repotune/adapter-claude";
+import { codexAdapter } from "@repotune/adapter-codex";
 import { copilotAdapter } from "@repotune/adapter-copilot";
 import { cursorAdapter } from "@repotune/adapter-cursor";
+import { devinAdapter } from "@repotune/adapter-devin";
 import {
 	addRule,
 	createSyncEngine,
@@ -23,7 +26,10 @@ export const ALL_ADAPTERS = new Map<AgentId, AgentAdapter>([
 	["claude", claudeAdapter],
 	["copilot", copilotAdapter],
 	["cursor", cursorAdapter],
+	["codex", codexAdapter],
 	["agents-md", agentsMdAdapter],
+	["devin", devinAdapter],
+	["antigravity", antigravityAdapter],
 ]);
 
 const GI_START = "<!-- repotune:start gitignore -->";
@@ -49,7 +55,7 @@ export async function setupRepo(
 	const now = new Date().toISOString();
 	await initRegistry(dir, agents);
 	await saveLock(
-		{ version: "0.1.2", lastSyncAt: now, generatedFiles: [] },
+		{ version: "0.2.0", lastSyncAt: now, generatedFiles: [] },
 		dir,
 	);
 	await saveLocalState({}, dir);

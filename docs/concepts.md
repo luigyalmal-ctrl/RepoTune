@@ -9,6 +9,10 @@
 
 Rules are written to this file by `repotune rule add` and read by `repotune sync`.
 
+If `agents` contains both `codex` and `agents-md`, RepoTune treats that as an overlap. Both adapters target `AGENTS.md`, so `codex` is skipped with warning `CODEX_AGENTS_MD_CONFLICT` to prevent duplicate managed blocks. `agents-md` owns the file; Codex reads the generated `AGENTS.md` at runtime. Skipped Codex output is not written to the lock file, and `repotune doctor` reports Codex as healthy (intentionally skipped), not dirty.
+
+If `agents` contains `devin` alongside `agents-md` or `codex`, RepoTune treats that as an overlap for the same reason: `devin` is skipped with a warning because `AGENTS.md` would otherwise contain duplicate managed blocks.
+
 ## Lock file
 
 `.ai/lock.json` tracks which files RepoTune has generated and how. Each entry records:
@@ -30,6 +34,20 @@ The lock is used by `repotune doctor` to validate files, and by adapters to deci
 | `overwrite` | File is fully managed | Write if file is in lock as fully managed. |
 | `managed-block` | File already exists with content | Inject block; preserve everything outside. |
 | `skip` | Agent does not support this rule type | Do nothing. |
+
+For Codex and Devin, RepoTune uses `managed-block` for global rules in `AGENTS.md` and `skip`-with-warning for path-scoped rules.
+
+## Codex and agents-md overlap
+
+When both `codex` and `agents-md` appear in `registry.agents`:
+
+| Concern | Behavior |
+| --- | --- |
+| File ownership | `agents-md` writes the single `AGENTS.md` managed block |
+| Codex sync | Skipped; emits `CODEX_AGENTS_MD_CONFLICT` on plan (dry-run and apply) |
+| Codex runtime | Codex reads the generated `AGENTS.md` — no separate Codex block needed |
+| Lock file | No Codex entry when output is skipped |
+| Doctor | Codex reported as ✓ intentionally skipped, exit code 0 when `agents-md` is synced |
 
 ## Checksum modes
 
@@ -75,6 +93,25 @@ Detection is case-insensitive and whole-word. A conflict blocks `repotune sync` 
 ## Adapter DI
 
 `@repotune/core` never imports adapter packages directly. The CLI constructs a `Map<AgentId, AgentAdapter>` and passes it to `createSyncEngine()`. This keeps core free of adapter dependencies and prevents circular imports.
+
+## Codex path rules
+
+OpenAI documents Codex project guidance through `AGENTS.md`, `AGENTS.override.md`, and configured fallback filenames discovered per directory. RepoTune stores path rules as arbitrary globs, so v0.2.0 does not map Codex path rules automatically. Unsupported Codex path rules emit `CODEX_PATH_SCOPE_NOT_SUPPORTED`.
+
+## Devin path rules
+
+Devin reads project rules from `AGENTS.md`, `AGENT.md`, and `CLAUDE.md`, and can import rules from Cursor, Windsurf, and Claude Code. It does not document a native project glob-scoped rule format. RepoTune does not generate Devin path rules in v0.2.0. Unsupported Devin path rules emit `DEVIN_PATH_SCOPE_NOT_SUPPORTED`.
+
+## Antigravity status
+
+- `IMPLEMENTED`: Antigravity global rule sync to `.agents/AGENTS.md` using `<!-- repotune:start antigravity -->` / `<!-- repotune:end antigravity -->`
+- `UNSUPPORTED`: arbitrary path-scoped globs for Antigravity
+
+Antigravity uses a different location (`.agents/AGENTS.md`) than Codex and Devin, so it does not conflict with them.
+
+## Antigravity path rules
+
+The official Antigravity specification (from Google DeepMind) explicitly confirms there is no native support for path-scoped rules or frontmatter activation. RepoTune does not generate Antigravity path rules in v0.2.0. Unsupported Antigravity path rules emit `ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED`.
 
 ## Path handling
 

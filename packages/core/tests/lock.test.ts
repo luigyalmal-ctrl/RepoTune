@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 const lock: LockFile = {
-	version: "0.1.2",
+	version: "0.2.0",
 	lastSyncAt: "2024-01-01T00:00:00.000Z",
 	generatedFiles: [],
 };

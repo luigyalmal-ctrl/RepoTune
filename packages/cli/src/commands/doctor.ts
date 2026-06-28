@@ -2,9 +2,15 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { agentsMdAdapter } from "@repotune/adapter-agents-md";
+import { antigravityAdapter } from "@repotune/adapter-antigravity";
 import { claudeAdapter } from "@repotune/adapter-claude";
+import {
+	codexAdapter,
+	isCodexSkippedForAgentsMd,
+} from "@repotune/adapter-codex";
 import { copilotAdapter } from "@repotune/adapter-copilot";
 import { cursorAdapter } from "@repotune/adapter-cursor";
+import { devinAdapter } from "@repotune/adapter-devin";
 import {
 	detectConflicts,
 	extractBlockContent,
@@ -21,7 +27,10 @@ const ALL_ADAPTERS = new Map<AgentId, AgentAdapter>([
 	["claude", claudeAdapter],
 	["copilot", copilotAdapter],
 	["cursor", cursorAdapter],
+	["codex", codexAdapter],
 	["agents-md", agentsMdAdapter],
+	["devin", devinAdapter],
+	["antigravity", antigravityAdapter],
 ]);
 
 function sha256(s: string): string {
@@ -74,6 +83,18 @@ export async function runDoctor(repoRoot: string): Promise<void> {
 	for (const agentId of reg.agents) {
 		const adapter = ALL_ADAPTERS.get(agentId);
 		if (!adapter) continue;
+
+		if (
+			agentId === "codex" &&
+			isCodexSkippedForAgentsMd(reg.agents) &&
+			(lockFile?.generatedFiles.filter((f) => f.agentId === "codex").length ??
+				0) === 0
+		) {
+			console.log(
+				`${"✓"} ${agentId.padEnd(12)} — AGENTS.md owned by agents-md (Codex reads generated file)`,
+			);
+			continue;
+		}
 
 		const validateWarnings = await adapter.validate({ repoRoot, lockFile });
 		const lockEntries =

@@ -45,7 +45,7 @@ export async function runRuleAdd(
 	if (opts.scope) {
 		if (opts.scope !== "global" && opts.scope !== "path") {
 			throw new Error(
-				`Invalid scope '${opts.scope}'. v0.1.2 supports: global, path`,
+				`Invalid scope '${opts.scope}'. v0.2.0 supports: global, path`,
 			);
 		}
 		scope = opts.scope;

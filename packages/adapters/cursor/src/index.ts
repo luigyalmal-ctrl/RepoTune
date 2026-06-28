@@ -99,7 +99,7 @@ export const cursorAdapter: AgentAdapter = {
 			} else {
 				warnings.push({
 					code: "CURSOR_SCOPE_NOT_SUPPORTED_IN_V1",
-					message: `Scope '${rule.scope}' is not supported by the Cursor adapter in v0.1.2`,
+					message: `Scope '${rule.scope}' is not supported by the Cursor adapter in v0.2.0`,
 					agentId: "cursor",
 					ruleId: rule.id,
 				});

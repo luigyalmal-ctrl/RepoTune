@@ -77,7 +77,7 @@ describe("writeGeneratedFile", () => {
 			makeFile({ strategy: "create" }),
 			dir,
 			{
-				version: "0.1.2",
+				version: "0.2.0",
 				lastSyncAt: "2024-01-01T00:00:00.000Z",
 				generatedFiles: [
 					{
@@ -108,7 +108,7 @@ describe("writeGeneratedFile", () => {
 			managedBlockMarker: marker,
 		});
 		await writeGeneratedFile(file, dir, {
-			version: "0.1.2",
+			version: "0.2.0",
 			lastSyncAt: "2024-01-01T00:00:00.000Z",
 			generatedFiles: [
 				{

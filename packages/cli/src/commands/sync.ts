@@ -1,8 +1,11 @@
 import { confirm } from "@inquirer/prompts";
 import { agentsMdAdapter } from "@repotune/adapter-agents-md";
+import { antigravityAdapter } from "@repotune/adapter-antigravity";
 import { claudeAdapter } from "@repotune/adapter-claude";
+import { codexAdapter } from "@repotune/adapter-codex";
 import { copilotAdapter } from "@repotune/adapter-copilot";
 import { cursorAdapter } from "@repotune/adapter-cursor";
+import { devinAdapter } from "@repotune/adapter-devin";
 import { createSyncEngine, loadRegistry } from "@repotune/core";
 import {
 	type AgentAdapter,
@@ -15,7 +18,10 @@ const ALL_ADAPTERS = new Map<AgentId, AgentAdapter>([
 	["claude", claudeAdapter],
 	["copilot", copilotAdapter],
 	["cursor", cursorAdapter],
+	["codex", codexAdapter],
 	["agents-md", agentsMdAdapter],
+	["devin", devinAdapter],
+	["antigravity", antigravityAdapter],
 ]);
 
 export interface SyncOptions {
@@ -37,7 +43,7 @@ export async function runSync(
 			const parsed = AgentIdSchema.safeParse(id);
 			if (!parsed.success) {
 				console.error(
-					`Error: unknown agent '${id}'. Valid agents: claude, copilot, cursor, agents-md`,
+					`Error: unknown agent '${id}'. Valid agents: claude, copilot, cursor, codex, agents-md, devin, antigravity`,
 				);
 				process.exit(2);
 			}

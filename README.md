@@ -1,10 +1,10 @@
 # RepoTune
 
-Keep your AI assistant rules in sync — one source of truth for Claude Code, GitHub Copilot, Cursor, and AGENTS.md.
+Keep your AI assistant rules in sync — one source of truth for Claude Code, GitHub Copilot, Cursor, OpenAI Codex, Devin, and AGENTS.md.
 
 ## The problem
 
-Every AI assistant reads from a different file in a different format. You end up maintaining four copies of the same rules — they drift, conflict, and fall out of date.
+Every AI assistant reads from a different file in a different format. You end up maintaining multiple copies of the same rules — they drift, conflict, and fall out of date.
 
 ## The solution
 
@@ -35,7 +35,28 @@ repotune rollback                      # undo the last sync
 | Claude Code | `CLAUDE.md` (managed block) + `.claude/rules/*.md` |
 | GitHub Copilot | `.github/copilot-instructions.md` + `.github/instructions/*.instructions.md` |
 | Cursor | `.cursor/rules/*.mdc` |
+| OpenAI Codex | `AGENTS.md` (managed block) |
+| Devin | `AGENTS.md` (managed block) |
 | AGENTS.md | `AGENTS.md` (managed block) |
+| Antigravity | `.agents/AGENTS.md` (managed block) |
+
+## Devin compatibility
+
+- `devin` is `IMPLEMENTED` for global rules.
+- `devin` path rules are `UNSUPPORTED` in v0.2.0 because Devin has no native project glob-scoped rule format.
+- `devin` can import rules from Cursor, Windsurf, and Claude Code via `.devin/config.json`, but RepoTune does not generate `.devin/config.json` in v0.2.0.
+- `devin`, `codex`, and `agents-md` all target `AGENTS.md`. RepoTune skips `devin` output and warns when `agents-md` or `codex` is also enabled.
+
+## Codex compatibility
+
+- `codex` is `IMPLEMENTED` for global rules.
+- `codex` path rules are `UNSUPPORTED` in v0.2.0 because Codex uses nested `AGENTS.md` files, not arbitrary glob-scoped rule files.
+- `codex` and `agents-md` both target `AGENTS.md`. When both are enabled in the registry:
+  - **`agents-md` owns `AGENTS.md`** — only the `agents-md` managed block is written.
+  - **Codex output is skipped** with warning `CODEX_AGENTS_MD_CONFLICT` (including on `--dry-run`).
+  - **Codex still works** — OpenAI Codex reads the generated `AGENTS.md` at runtime; no separate Codex block is required.
+  - **No false lock entry** — skipped Codex output is not recorded in `.ai/lock.json`.
+  - **`doctor` stays healthy** — Codex is reported as intentionally skipped, not "not synced yet".
 
 ## Safety guarantees
 
@@ -75,3 +96,9 @@ repotune rollback [options]    Restore from last backup
 ## License
 
 MIT
+
+Docs Impact
+- Updated: `README.md`, `docs/overview.md`, `docs/concepts.md`, `docs/quickstart.md`, `CHANGELOG.md`, `docs/Build specs/repotune-build-spec-v0.2.0.md`
+- Reviewed, no change needed: `docs/Build specs/repotune-build-spec-v0.1.2.md`
+- Archived/removed: none
+- Open doc debt: safe Codex path-rule mapping and Devin path-rule mapping are not implemented yet

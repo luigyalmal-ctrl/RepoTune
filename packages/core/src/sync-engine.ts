@@ -236,7 +236,7 @@ export function createSyncEngine(adapters: Map<AgentId, AgentAdapter>) {
 		);
 
 		await saveLock(
-			{ version: "0.1.2", lastSyncAt: now, generatedFiles: nextGeneratedFiles },
+			{ version: "0.2.0", lastSyncAt: now, generatedFiles: nextGeneratedFiles },
 			opts.repoRoot,
 		);
 		if (backupPath) {

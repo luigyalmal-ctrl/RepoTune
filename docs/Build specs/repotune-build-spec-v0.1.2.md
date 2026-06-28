@@ -28,8 +28,8 @@
 | 14 | `strategy: 'create'` semantics clarified: warns if file exists and is not in lock | Added | Analysis |
 | 15 | `.gitignore` update by `init` is idempotent via managed block | Added | Analysis |
 | 16 | Output order is deterministic: rules by `createdAt` asc, files by `agentId` + `outputPath` | Added | Analysis |
-| 17 | Claude path rules: `globs:` key (not `paths:`) — bug confirmed in official repo | **Critical correction** | Verified |
-| 18 | Claude path rules: glob patterns must be **quoted strings** in YAML | **Critical correction** | Verified |
+| 17 | Claude path rules emit both `paths:` array and `globs:` scalar for compatibility; pattern values are JSON-serialized (supersedes v0.1.1 `globs`-only correction) | **Correction** | Verified 2026-06-27 |
+| 18 | Claude, Copilot, and Cursor path patterns serialized with `JSON.stringify()` in frontmatter | **Correction** | Verified |
 | 19 | Repo root resolution defined: git root if `.git` found, else `cwd` | Added | Analysis |
 | 20 | All stored paths are repo-relative with `/` separator (Windows safe) | Added | Analysis |
 | 21 | Rule ID collision check before writing to registry | Added | Analysis |
@@ -504,6 +504,8 @@ File: `packages/adapters/claude/src/index.ts`
 
 ```markdown
 ---
+paths:
+  - "src/**/*.ts"
 globs: "src/**/*.ts"
 ---
 
@@ -1294,8 +1296,8 @@ Owner: **QA Agent**
 
 **adapters/claude:**
 - Global rule: targets `CLAUDE.md`
-- Path rule: file content has `globs:` key (not `paths:`), value is quoted string
-- Path rule with pattern starting `*`: value is `"*..."` (quoted)
+- Path rule: emits both `paths:` array and `globs:` scalar for compatibility; pattern values are JSON-serialized
+- Path rule with pattern starting `*` or `{`: safely quoted via `JSON.stringify`
 - Language rule → Warning `CLAUDE_SCOPE_NOT_SUPPORTED_IN_V1`
 
 **adapters/copilot:**
@@ -1336,7 +1338,7 @@ All use real tmp directories. No `fs` mocks. Each test cleans up.
 | I-16 | Copilot path rule | File has `applyTo:` frontmatter |
 | I-17 | Cursor global rule | `.mdc` has `alwaysApply: true`, `globs: []` |
 | I-18 | Cursor path rule | `.mdc` has `alwaysApply: false`, `globs: [...]` |
-| I-19 | Claude path rule | `.claude/rules/{id}.md` has `globs:` key, value is quoted |
+| I-19 | Claude path rule | `.claude/rules/{id}.md` has both `paths:` array and `globs:` scalar; pattern JSON-serialized |
 | I-20 | `create` strategy on file not in lock | Warning emitted, file not overwritten |
 
 ### 9.3 Test fixtures
@@ -1406,7 +1408,7 @@ tests/fixtures/
 - `plan()` is read-only: may read files, never writes
 - `plan()` returns `AdapterPlanResult` (not `GeneratedFile[]`)
 - `plan()` never throws — returns Warning for unsupported scopes
-- Claude path rules use `globs:` key with quoted values
+- Claude path rules emit both `paths:` array and `globs:` scalar for compatibility; pattern values are JSON-serialized
 - Copilot path rules have `applyTo:` frontmatter
 - Cursor `.mdc` has `description:`, `globs:`, `alwaysApply:`
 - All unit tests pass, `pnpm build` succeeds
@@ -1532,7 +1534,7 @@ tests/fixtures/
 - [ ] `npx repotune rule list` prints table
 - [ ] `npx repotune sync --dry-run` shows diff, writes zero files
 - [ ] `npx repotune sync` writes correct files for all 4 adapters
-- [ ] Claude path rules: `globs:` key, quoted values
+- [ ] Claude path rules: both `paths:` array and `globs:` scalar; pattern values JSON-serialized
 - [ ] Copilot path rules: `applyTo:` frontmatter
 - [ ] Cursor `.mdc`: `description:`, `globs:`, `alwaysApply:`
 - [ ] Manual content in pre-existing files preserved byte-identical
@@ -1566,8 +1568,8 @@ tests/fixtures/
 | Dry-run scope | Sync operations only |
 | CLI rule scopes exposed | `global` and `path` only in v0.1.2 |
 | `planSync` vs `applySync` | Split — `SyncEngine` has two methods |
-| Claude path rule frontmatter key | `globs:` (not `paths:`) — bug confirmed in anthropics/claude-code#17204 |
-| Claude glob values | Must always be quoted strings in YAML |
+| Claude path rule frontmatter | Both `paths:` array and `globs:` scalar for compatibility; pattern values JSON-serialized (see #17204, #13905) |
+| Claude/Copilot/Cursor path pattern escaping | `JSON.stringify()` in generated frontmatter |
 | Repo root resolution | `git root` if `.git` found ascending from cwd; else `cwd` |
 | Path separator in stored files | Always `/`, never `\` |
 | Rule ID collision | Check before write; regenerate suffix up to 5 times |

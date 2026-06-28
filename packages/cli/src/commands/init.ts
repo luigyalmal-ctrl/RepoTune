@@ -33,7 +33,7 @@ function parseAgents(raw: string): AgentId[] {
 		const parsed = AgentIdSchema.safeParse(id);
 		if (!parsed.success) {
 			throw new Error(
-				`Unknown agent '${id}'. Valid agents: claude, copilot, cursor, agents-md`,
+				`Unknown agent '${id}'. Valid agents: claude, copilot, cursor, codex, agents-md, devin`,
 			);
 		}
 		agents.push(parsed.data);
@@ -75,7 +75,9 @@ export async function runInit(
 				{ name: "Claude Code", value: "claude", checked: true },
 				{ name: "GitHub Copilot", value: "copilot", checked: true },
 				{ name: "Cursor", value: "cursor", checked: true },
+				{ name: "OpenAI Codex", value: "codex", checked: false },
 				{ name: "AGENTS.md", value: "agents-md", checked: true },
+				{ name: "Devin", value: "devin", checked: false },
 			],
 		}));
 
@@ -85,7 +87,7 @@ export async function runInit(
 	const now = new Date().toISOString();
 	await initRegistry(repoRoot, agents);
 	await saveLock(
-		{ version: "0.1.2", lastSyncAt: now, generatedFiles: [] },
+		{ version: "0.2.0", lastSyncAt: now, generatedFiles: [] },
 		repoRoot,
 	);
 	await saveLocalState({}, repoRoot);

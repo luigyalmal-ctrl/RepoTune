@@ -3,14 +3,17 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"pretest": "pnpm --filter @repotune/cli build",
+		"pretest": "pnpm run -r build",
 		"test": "vitest run"
 	},
 	"devDependencies": {
 		"@repotune/adapter-agents-md": "workspace:*",
 		"@repotune/adapter-claude": "workspace:*",
+		"@repotune/adapter-codex": "workspace:*",
+		"@repotune/adapter-antigravity": "workspace:*",
 		"@repotune/adapter-copilot": "workspace:*",
 		"@repotune/adapter-cursor": "workspace:*",
+		"@repotune/adapter-devin": "workspace:*",
 		"@repotune/cli": "workspace:*",
 		"@repotune/core": "workspace:*",
 		"@repotune/schemas": "workspace:*",

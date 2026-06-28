@@ -233,7 +233,7 @@ describe("I-14: conflicting rules block sync", () => {
 		await initRegistry(dir, ["claude"]);
 		for (const r of rules) await addRule(r, dir);
 		await saveLock(
-			{ version: "0.1.2", lastSyncAt: now, generatedFiles: [] },
+			{ version: "0.2.0", lastSyncAt: now, generatedFiles: [] },
 			dir,
 		);
 
@@ -272,7 +272,7 @@ describe("I-15: --yes does not bypass conflicts", () => {
 		await initRegistry(dir, ["claude"]);
 		for (const r of rules) await addRule(r, dir);
 		await saveLock(
-			{ version: "0.1.2", lastSyncAt: now, generatedFiles: [] },
+			{ version: "0.2.0", lastSyncAt: now, generatedFiles: [] },
 			dir,
 		);
 
@@ -332,5 +332,231 @@ describe("I-20: create strategy does not overwrite unmanaged files", () => {
 		expect(
 			lock?.generatedFiles.some((f) => f.path === ".cursor/rules/use-pnpm.mdc"),
 		).toBe(false);
+	});
+});
+
+describe("Codex sync behavior", () => {
+	it("rollback restores codex-managed AGENTS.md changes", async () => {
+		await setupRepo(dir, ["codex"]);
+		const original = "# Manual instructions\n";
+		await writeFile(join(dir, "AGENTS.md"), original, "utf8");
+
+		const { applied, backupPath } = await doSync(
+			dir,
+			[makeRule("use-pnpm", { content: "Use pnpm, never npm." })],
+			["codex"],
+		);
+		expect(applied).toBe(true);
+
+		await restoreBackup(backupPath, dir);
+		expect(await readFile(join(dir, "AGENTS.md"), "utf8")).toBe(original);
+	});
+
+	it("preserves manual content outside the codex managed block", async () => {
+		await setupRepo(dir, ["codex"]);
+		const header = "# Manual header\n\nKeep this.\n\n";
+		const footer = "\n## Manual footer\nStill here.\n";
+		await writeFile(join(dir, "AGENTS.md"), `${header}${footer}`, "utf8");
+
+		const { applied } = await doSync(
+			dir,
+			[makeRule("use-pnpm", { content: "Use pnpm, never npm." })],
+			["codex"],
+		);
+		expect(applied).toBe(true);
+
+		const result = await readFile(join(dir, "AGENTS.md"), "utf8");
+		expect(result).toContain(header);
+		expect(result).toContain(footer.trim());
+		expect(result).toContain("<!-- repotune:start codex -->");
+		expect(result).toContain("<!-- repotune:end codex -->");
+	});
+
+	it("skips codex output when agents-md is also enabled", async () => {
+		await setupRepo(dir, ["codex", "agents-md"]);
+		const rules = [makeRule("use-pnpm", { content: "Use pnpm, never npm." })];
+		for (const rule of rules) await addRule(rule, dir);
+
+		const engine = createSyncEngine(ALL_ADAPTERS);
+		const preview = await engine.planSync(rules, {
+			agents: ["codex"],
+			repoRoot: dir,
+		});
+
+		expect(preview.plan.generatedFiles).toHaveLength(0);
+		expect(
+			preview.plan.warnings.some(
+				(warning) => warning.code === "CODEX_AGENTS_MD_CONFLICT",
+			),
+		).toBe(true);
+
+		const result = await engine.applySync(preview, {
+			agents: ["codex"],
+			repoRoot: dir,
+		});
+		expect(result.applied).toBe(true);
+		await expect(access(join(dir, "AGENTS.md"))).rejects.toThrow();
+
+		const lock = await loadLock(dir);
+		expect(lock?.generatedFiles.some((file) => file.agentId === "codex")).toBe(
+			false,
+		);
+	});
+
+	it("agents-md owns AGENTS.md when synced with codex", async () => {
+		await setupRepo(dir, ["codex", "agents-md"]);
+		const rules = [makeRule("use-pnpm", { content: "Use pnpm, never npm." })];
+		for (const rule of rules) await addRule(rule, dir);
+
+		const { preview, applied } = await doSync(dir, rules, [
+			"codex",
+			"agents-md",
+		]);
+		expect(applied).toBe(true);
+		expect(
+			preview.plan.warnings.some(
+				(warning) => warning.code === "CODEX_AGENTS_MD_CONFLICT",
+			),
+		).toBe(true);
+		expect(
+			preview.plan.generatedFiles.filter((f) => f.agentId === "codex"),
+		).toHaveLength(0);
+		expect(
+			preview.plan.generatedFiles.filter((f) => f.agentId === "agents-md"),
+		).toHaveLength(1);
+
+		const content = await readFile(join(dir, "AGENTS.md"), "utf8");
+		expect(content).toContain("<!-- repotune:start agents-md -->");
+		expect(content).not.toContain("<!-- repotune:start codex -->");
+		expect(content.split("<!-- repotune:start agents-md -->").length - 1).toBe(
+			1,
+		);
+
+		const lock = await loadLock(dir);
+		expect(lock?.generatedFiles.some((file) => file.agentId === "codex")).toBe(
+			false,
+		);
+		expect(
+			lock?.generatedFiles.some((file) => file.agentId === "agents-md"),
+		).toBe(true);
+	});
+});
+
+describe("Devin sync behavior", () => {
+	it("rollback restores devin-managed AGENTS.md changes", async () => {
+		await setupRepo(dir, ["devin"]);
+		const original = "# Manual instructions\n";
+		await writeFile(join(dir, "AGENTS.md"), original, "utf8");
+
+		const { applied, backupPath } = await doSync(
+			dir,
+			[makeRule("use-pnpm", { content: "Use pnpm, never npm." })],
+			["devin"],
+		);
+		expect(applied).toBe(true);
+
+		await restoreBackup(backupPath, dir);
+		expect(await readFile(join(dir, "AGENTS.md"), "utf8")).toBe(original);
+	});
+
+	it("preserves manual content outside the devin managed block", async () => {
+		await setupRepo(dir, ["devin"]);
+		const header = "# Manual header\n\nKeep this.\n\n";
+		const footer = "\n## Manual footer\nStill here.\n";
+		await writeFile(join(dir, "AGENTS.md"), `${header}${footer}`, "utf8");
+
+		const { applied } = await doSync(
+			dir,
+			[makeRule("use-pnpm", { content: "Use pnpm, never npm." })],
+			["devin"],
+		);
+		expect(applied).toBe(true);
+
+		const result = await readFile(join(dir, "AGENTS.md"), "utf8");
+		expect(result).toContain(header);
+		expect(result).toContain(footer.trim());
+		expect(result).toContain("<!-- repotune:start devin -->");
+		expect(result).toContain("<!-- repotune:end devin -->");
+	});
+
+	it("skips devin output when agents-md is also enabled", async () => {
+		await setupRepo(dir, ["devin", "agents-md"]);
+		const rules = [makeRule("use-pnpm", { content: "Use pnpm, never npm." })];
+		for (const rule of rules) await addRule(rule, dir);
+
+		const engine = createSyncEngine(ALL_ADAPTERS);
+		const preview = await engine.planSync(rules, {
+			agents: ["devin"],
+			repoRoot: dir,
+		});
+
+		expect(preview.plan.generatedFiles).toHaveLength(0);
+		expect(
+			preview.plan.warnings.some(
+				(warning) => warning.code === "DEVIN_AGENTS_MD_CONFLICT",
+			),
+		).toBe(true);
+
+		const result = await engine.applySync(preview, {
+			agents: ["devin"],
+			repoRoot: dir,
+		});
+		expect(result.applied).toBe(true);
+		await expect(access(join(dir, "AGENTS.md"))).rejects.toThrow();
+
+		const lock = await loadLock(dir);
+		expect(lock?.generatedFiles.some((file) => file.agentId === "devin")).toBe(
+			false,
+		);
+	});
+
+	it("skips devin output when codex is also enabled", async () => {
+		await setupRepo(dir, ["devin", "codex"]);
+		const rules = [makeRule("use-pnpm", { content: "Use pnpm, never npm." })];
+		for (const rule of rules) await addRule(rule, dir);
+
+		const engine = createSyncEngine(ALL_ADAPTERS);
+		const preview = await engine.planSync(rules, {
+			agents: ["devin"],
+			repoRoot: dir,
+		});
+
+		expect(preview.plan.generatedFiles).toHaveLength(0);
+		expect(
+			preview.plan.warnings.some(
+				(warning) => warning.code === "DEVIN_AGENTS_MD_CONFLICT",
+			),
+		).toBe(true);
+
+		const result = await engine.applySync(preview, {
+			agents: ["devin"],
+			repoRoot: dir,
+		});
+		expect(result.applied).toBe(true);
+		await expect(access(join(dir, "AGENTS.md"))).rejects.toThrow();
+
+		const lock = await loadLock(dir);
+		expect(lock?.generatedFiles.some((file) => file.agentId === "devin")).toBe(
+			false,
+		);
+	});
+});
+
+describe("Antigravity adapter in sync engine", () => {
+	it("rollback restores antigravity-managed AGENTS.md changes", async () => {
+		await setupRepo(dir, ["antigravity"]);
+		await mkdir(join(dir, ".agents"), { recursive: true });
+		const original = "# Some Existing Manual Rule\n\n- Do things.\n";
+		await writeFile(join(dir, ".agents/AGENTS.md"), original, "utf8");
+
+		const rules = [makeRule("use-pnpm")];
+		const { backupPath } = await doSync(dir, rules, ["antigravity"]);
+
+		const { restoreBackup } = await import("@repotune/core");
+		await restoreBackup(backupPath, dir);
+
+		expect(await readFile(join(dir, ".agents/AGENTS.md"), "utf8")).toBe(
+			original,
+		);
 	});
 });

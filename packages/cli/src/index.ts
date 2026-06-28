@@ -12,14 +12,14 @@ const program = new Command();
 program
 	.name("repotune")
 	.description("Sync AI assistant rules across agents")
-	.version("0.1.2");
+	.version("0.2.0");
 
 program
 	.command("init")
 	.description("Initialize RepoTune in this repository")
 	.option(
 		"--agents <ids>",
-		"Comma-separated agents (claude,copilot,cursor,agents-md)",
+		"Comma-separated agents (claude,copilot,cursor,codex,agents-md)",
 	)
 	.option("--yes", "Skip confirmation prompts (required to re-init)", false)
 	.action(async (opts: { agents?: string; yes: boolean }) => {
