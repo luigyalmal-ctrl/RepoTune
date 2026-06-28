@@ -14,6 +14,10 @@ describe("AgentIdSchema", () => {
 	it("parses devin as a supported agent", () => {
 		expect(AgentIdSchema.parse("devin")).toBe("devin");
 	});
+
+	it("parses antigravity as a supported agent", () => {
+		expect(AgentIdSchema.parse("antigravity")).toBe("antigravity");
+	});
 });
 
 describe("RuleSchema", () => {

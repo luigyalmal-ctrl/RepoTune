@@ -51,12 +51,25 @@ export const antigravityAdapter: AgentAdapter = {
 		const { managedBlockMarker: marker } = capabilities;
 
 		const globalRules = rules.filter((r) => r.scope === "global");
+		const pathRules = rules.filter((r) => r.scope === "path");
+		const unsupportedRules = rules.filter(
+			(r) => r.scope !== "global" && r.scope !== "path",
+		);
 
-		for (const rule of rules.filter((r) => r.scope !== "global")) {
+		for (const rule of pathRules) {
 			warnings.push({
 				code: "ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED",
 				message:
 					"Antigravity path rules are not generated in RepoTune v0.2.0 because RepoTune does not map arbitrary globs to per-file Antigravity rule activation.",
+				agentId: "antigravity",
+				ruleId: rule.id,
+			});
+		}
+
+		for (const rule of unsupportedRules) {
+			warnings.push({
+				code: "ANTIGRAVITY_SCOPE_NOT_SUPPORTED",
+				message: `Scope '${rule.scope}' is not supported by the antigravity adapter`,
 				agentId: "antigravity",
 				ruleId: rule.id,
 			});

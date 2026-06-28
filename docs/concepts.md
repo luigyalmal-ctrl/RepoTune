@@ -123,7 +123,7 @@ Antigravity uses `.agents/rules/` (legacy `.agent/rules` is backward-compatible 
 
 ## Antigravity path rules
 
-Antigravity supports per-rule Glob activation in the IDE, but RepoTune stores path rules as arbitrary globs without a faithful one-to-one mapping to Antigravity rule files in v0.2.0. Unsupported path rules emit `ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED`.
+Antigravity supports per-rule Glob activation in the IDE, but RepoTune stores path rules as arbitrary globs without a faithful one-to-one mapping to Antigravity rule files in v0.2.0. Unsupported path rules emit `ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED`; other unsupported scopes emit `ANTIGRAVITY_SCOPE_NOT_SUPPORTED`.
 
 ## Path handling
 

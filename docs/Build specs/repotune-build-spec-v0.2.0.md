@@ -93,7 +93,7 @@ When `registry.agents` includes both `codex` and `agents-md`:
 | Lock | Only `agents-md` entries are recorded; no false Codex lock row |
 | Dry-run | Warning is shown; zero files written |
 | Doctor | Codex shows ✓ "AGENTS.md owned by agents-md (Codex reads generated file)"; exit 0 |
-| Runtime | OpenAI Codex reads the RepoTune-generated `AGENTS.md |
+| Runtime | OpenAI Codex reads the RepoTune-generated `AGENTS.md` |
 
 ## Devin + AGENTS.md overlap policy
 

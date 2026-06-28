@@ -80,13 +80,13 @@ describe("antigravityAdapter", () => {
 		expect(warnings[0]?.code).toBe("ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED");
 	});
 
-	it("non-global rules emit ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED", async () => {
+	it("non-path, non-global rules emit ANTIGRAVITY_SCOPE_NOT_SUPPORTED", async () => {
 		const { generatedFiles, warnings } = await antigravityAdapter.plan(
 			[rule({ scope: "language", language: "typescript" })],
 			dir,
 		);
 		expect(generatedFiles).toHaveLength(0);
-		expect(warnings[0]?.code).toBe("ANTIGRAVITY_PATH_SCOPE_NOT_SUPPORTED");
+		expect(warnings[0]?.code).toBe("ANTIGRAVITY_SCOPE_NOT_SUPPORTED");
 	});
 
 	it("returns no files and no warnings for empty rules", async () => {

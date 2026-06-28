@@ -150,6 +150,14 @@ describe("CLI integration", () => {
 		expect(stdout).toContain("rollback");
 	});
 
+	it("init --help lists v0.2.0 agent ids", () => {
+		const { status, stdout } = runCli(["init", "--help"], dir);
+		expect(status).toBe(0);
+		expect(stdout).toContain("antigravity");
+		expect(stdout).toContain("codex");
+		expect(stdout).toContain("devin");
+	});
+
 	it("init --agents codex --yes enables codex only", async () => {
 		const { status } = runCli(["init", "--agents", "codex", "--yes"], dir);
 		expect(status).toBe(0);
