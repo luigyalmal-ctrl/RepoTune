@@ -120,12 +120,13 @@ export const GeneratedFileSchema = BaseGeneratedFileSchema.superRefine(
 export type GeneratedFile = z.infer<typeof GeneratedFileSchema>;
 
 // 4.12 Warning (defined before AdapterPlanResult which depends on it)
+// [SPEC ADJUSTMENT] Optional `path` added for skipped-file warnings (e.g. FILE_EXISTS_NOT_IN_LOCK).
 export const WarningSchema = z.object({
 	code: z.string(),
 	message: z.string(),
 	agentId: AgentIdSchema.optional(),
 	ruleId: z.string().optional(),
-	path: z.string().optional(),
+	path: z.string().optional(), // repo-relative output path, when warning refers to a specific file
 });
 export type Warning = z.infer<typeof WarningSchema>;
 

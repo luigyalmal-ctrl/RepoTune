@@ -38,6 +38,10 @@ function makeDescription(content: string): string {
 	return single.length > 80 ? `${single.slice(0, 80)}...` : single;
 }
 
+function formatGlobs(pathPattern: string): string {
+	return `[${JSON.stringify(pathPattern)}]`;
+}
+
 function renderMdc(
 	description: string,
 	globs: string,
@@ -71,13 +75,22 @@ export const cursorAdapter: AgentAdapter = {
 					ruleIds: [rule.id],
 				});
 			} else if (rule.scope === "path") {
+				if (!rule.pathPattern) {
+					warnings.push({
+						code: "CURSOR_MISSING_PATH_PATTERN",
+						message: `Path rule '${rule.id}' has no pathPattern — skipped`,
+						agentId: "cursor",
+						ruleId: rule.id,
+					});
+					continue;
+				}
 				files.push({
 					agentId: "cursor",
 					outputPath: `.cursor/rules/${rule.id}.mdc`,
 					strategy: "create",
 					content: renderMdc(
 						makeDescription(rule.content),
-						`["${rule.pathPattern ?? ""}"]`,
+						formatGlobs(rule.pathPattern),
 						false,
 						rule.content,
 					),

@@ -12,3 +12,8 @@ Initial MVP release.
 - Backup manifest and rollback support
 - Conflict detection blocks sync
 - Lockfile tracks generated files with checksum validation
+
+### Technical adjustments (vs build spec v0.1.2 draft)
+
+- **`Warning.path`** — optional repo-relative output path on `Warning`. Not in the original spec (`code`, `message`, `agentId`, `ruleId` only). Used to identify skipped files in sync output and lock/backup logic without parsing `message`.
+- **Cursor `CURSOR_MISSING_PATH_PATTERN`** — defensive warning when a path-scoped rule has no `pathPattern` (mirrors Copilot adapter behavior).

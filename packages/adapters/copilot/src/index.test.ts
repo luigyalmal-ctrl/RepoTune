@@ -44,6 +44,43 @@ describe("copilotAdapter.plan", () => {
 		expect(f.content).toContain('applyTo: "src/**/*.ts"');
 	});
 
+	it.each([
+		'src/**/"special"/*.ts',
+		"src\\windows\\**/*.ts",
+		"src/has spaces/**/*.ts",
+		"src/with,comma/**/*.ts",
+		"src/**/*.{ts,tsx}",
+	])(
+		"path rule serializes applyTo safely for pattern %s",
+		async (pathPattern) => {
+			const expectedRule = rule({ scope: "path", pathPattern });
+			const { generatedFiles } = await copilotAdapter.plan([expectedRule], dir);
+			const f = generatedFiles[0];
+			expect(f.outputPath).toBe(
+				".github/instructions/use-pnpm-a3f2.instructions.md",
+			);
+			expect(f.content).toContain("---\n");
+			expect(f.content).toContain("applyTo:");
+			expect(f.content).toContain(JSON.stringify(pathPattern));
+			expect(f.content.endsWith(`\n${expectedRule.content}`)).toBe(true);
+		},
+	);
+
+	it("unsupported scope returns COPILOT_SCOPE_NOT_SUPPORTED_IN_V1 warning", async () => {
+		const { warnings } = await copilotAdapter.plan(
+			[rule({ scope: "language", language: "typescript" })],
+			dir,
+		);
+		expect(warnings).toHaveLength(1);
+		expect(warnings[0].code).toBe("COPILOT_SCOPE_NOT_SUPPORTED_IN_V1");
+	});
+
+	it("empty rules array returns no generated files and no warnings", async () => {
+		const { generatedFiles, warnings } = await copilotAdapter.plan([], dir);
+		expect(generatedFiles).toHaveLength(0);
+		expect(warnings).toHaveLength(0);
+	});
+
 	it("path rule without pathPattern emits warning and skips file", async () => {
 		// Bypasses schema validation to test defensive guard in adapter
 		const badRule = {

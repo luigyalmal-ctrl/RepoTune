@@ -78,6 +78,24 @@ describe("I-18: Cursor path rule", () => {
 		expect(content).toContain("globs:");
 		expect(content).toContain("src/**/*.ts");
 	});
+
+	it("second sync produces byte-identical .mdc files", async () => {
+		await setupRepo(dir, ["cursor"]);
+		const rules = [makeRule("use-pnpm", { content: "Use pnpm." })];
+		await doSync(dir, rules, ["cursor"]);
+		const afterFirst = await readFile(
+			join(dir, ".cursor", "rules", "use-pnpm.mdc"),
+			"utf8",
+		);
+
+		await doSync(dir, rules, ["cursor"]);
+		const afterSecond = await readFile(
+			join(dir, ".cursor", "rules", "use-pnpm.mdc"),
+			"utf8",
+		);
+
+		expect(afterSecond).toBe(afterFirst);
+	});
 });
 
 // I-19: Claude path rule → .claude/rules/{id}.md with globs: key, value is quoted

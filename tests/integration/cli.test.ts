@@ -238,6 +238,57 @@ describe("CLI integration", () => {
 		expect(lockAfter?.generatedFiles).toEqual(lockBefore?.generatedFiles);
 	});
 
+	it("copilot sync preserves manual content and deduplicates managed block", async () => {
+		await setupRepo(dir, ["copilot"]);
+		await mkdir(join(dir, ".github"), { recursive: true });
+		const manualHeader = "# Manual Repo Instructions\n\nKeep this content.\n\n";
+		const manualFooter = "\n\n## Footer note\nKeep this too.\n";
+		await writeFile(
+			join(dir, ".github", "copilot-instructions.md"),
+			`${manualHeader}${manualFooter}`,
+			"utf8",
+		);
+
+		const { status } = runCli(
+			["rule", "add", "Use pnpm, never npm.", "--scope", "global"],
+			dir,
+		);
+		expect(status).toBe(0);
+
+		expect(runCli(["sync", "--yes", "--agent", "copilot"], dir).status).toBe(0);
+
+		let content = await readFile(
+			join(dir, ".github", "copilot-instructions.md"),
+			"utf8",
+		);
+		expect(content).toContain(manualHeader.trim());
+		expect(content).toContain(manualFooter.trim());
+		expect(content.split("<!-- repotune:start copilot -->").length - 1).toBe(1);
+		expect(content.split("<!-- repotune:end copilot -->").length - 1).toBe(1);
+		expect(content).toContain("Use pnpm, never npm.");
+
+		const { status: addStatus } = runCli(
+			["rule", "add", "Use manual content outside a managed block.", "--scope", "global"],
+			dir,
+		);
+		expect(addStatus).toBe(0);
+		expect(runCli(["sync", "--yes", "--agent", "copilot"], dir).status).toBe(0);
+
+		content = await readFile(
+			join(dir, ".github", "copilot-instructions.md"),
+			"utf8",
+		);
+		expect(content.split("<!-- repotune:start copilot -->").length - 1).toBe(1);
+		expect(content.split("<!-- repotune:end copilot -->").length - 1).toBe(1);
+		expect(content).toContain("Use pnpm, never npm.");
+		expect(content).toContain("Use manual content outside a managed block.");
+		expect(content).toContain(manualHeader.trim());
+		expect(content).toContain(manualFooter.trim());
+
+		const doctor = runCli(["doctor"], dir);
+		expect(doctor.status).toBe(0);
+	});
+
 	it("sync --yes writes expected files", async () => {
 		await setupRepo(dir);
 		await addRule(makeRule("use-pnpm"), dir);

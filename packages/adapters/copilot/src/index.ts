@@ -81,11 +81,12 @@ export const copilotAdapter: AgentAdapter = {
 				continue;
 			}
 
+			const applyTo = JSON.stringify(rule.pathPattern);
 			files.push({
 				agentId: "copilot",
 				outputPath: `.github/instructions/${rule.id}.instructions.md`,
 				strategy: "create",
-				content: `---\napplyTo: "${rule.pathPattern}"\n---\n\n${rule.content}`,
+				content: `---\napplyTo: ${applyTo}\n---\n\n${rule.content}`,
 				ruleIds: [rule.id],
 			});
 		}

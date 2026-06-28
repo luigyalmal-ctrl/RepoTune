@@ -40,7 +40,7 @@ repotune rollback                      # undo the last sync
 ## Safety guarantees
 
 - `--dry-run` writes zero files, always
-- Backup created before every sync in `.ai/.backups/`
+- Backup created before applying sync changes in `.ai/.backups/`
 - Manual content in pre-existing files is never touched (managed blocks inject alongside, not over, your content)
 - `rollback` restores modified files byte-identical and deletes files created by the last sync
 - Conflicts (e.g. "use pnpm" + "use npm") block sync until resolved
